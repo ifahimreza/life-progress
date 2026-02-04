@@ -3,7 +3,7 @@ import "./globals.css";
 import Providers from "../components/Providers";
 
 export const metadata: Metadata = {
-  title: "Life Progress",
+  title: "Life Dots",
   description: "Track the passage of time with a minimalist life progress view."
 };
 
