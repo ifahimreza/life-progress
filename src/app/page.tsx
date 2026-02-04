@@ -1,359 +1,20 @@
 "use client";
 
 import {useEffect, useMemo, useState} from "react";
-import {Input} from "baseui/input";
-import {Select} from "baseui/select";
-import {DatePicker} from "baseui/datepicker";
-import {Drawer} from "baseui/drawer";
-
-const countryCodes = [
-  "AF",
-  "AL",
-  "DZ",
-  "AS",
-  "AD",
-  "AO",
-  "AI",
-  "AQ",
-  "AG",
-  "AR",
-  "AM",
-  "AW",
-  "AU",
-  "AT",
-  "AZ",
-  "BS",
-  "BH",
-  "BD",
-  "BB",
-  "BY",
-  "BE",
-  "BZ",
-  "BJ",
-  "BM",
-  "BT",
-  "BO",
-  "BQ",
-  "BA",
-  "BW",
-  "BV",
-  "BR",
-  "IO",
-  "BN",
-  "BG",
-  "BF",
-  "BI",
-  "KH",
-  "CM",
-  "CA",
-  "CV",
-  "KY",
-  "CF",
-  "TD",
-  "CL",
-  "CN",
-  "CX",
-  "CC",
-  "CO",
-  "KM",
-  "CG",
-  "CD",
-  "CK",
-  "CR",
-  "CI",
-  "HR",
-  "CU",
-  "CW",
-  "CY",
-  "CZ",
-  "DK",
-  "DJ",
-  "DM",
-  "DO",
-  "EC",
-  "EG",
-  "SV",
-  "GQ",
-  "ER",
-  "EE",
-  "SZ",
-  "ET",
-  "FK",
-  "FO",
-  "FJ",
-  "FI",
-  "FR",
-  "GF",
-  "PF",
-  "TF",
-  "GA",
-  "GM",
-  "GE",
-  "DE",
-  "GH",
-  "GI",
-  "GR",
-  "GL",
-  "GD",
-  "GP",
-  "GU",
-  "GT",
-  "GG",
-  "GN",
-  "GW",
-  "GY",
-  "HT",
-  "HM",
-  "VA",
-  "HN",
-  "HK",
-  "HU",
-  "IS",
-  "IN",
-  "ID",
-  "IR",
-  "IQ",
-  "IE",
-  "IM",
-  "IL",
-  "IT",
-  "JM",
-  "JP",
-  "JE",
-  "JO",
-  "KZ",
-  "KE",
-  "KI",
-  "KP",
-  "KR",
-  "KW",
-  "KG",
-  "LA",
-  "LV",
-  "LB",
-  "LS",
-  "LR",
-  "LY",
-  "LI",
-  "LT",
-  "LU",
-  "MO",
-  "MG",
-  "MW",
-  "MY",
-  "MV",
-  "ML",
-  "MT",
-  "MH",
-  "MQ",
-  "MR",
-  "MU",
-  "YT",
-  "MX",
-  "FM",
-  "MD",
-  "MC",
-  "MN",
-  "ME",
-  "MS",
-  "MA",
-  "MZ",
-  "MM",
-  "NA",
-  "NR",
-  "NP",
-  "NL",
-  "NC",
-  "NZ",
-  "NI",
-  "NE",
-  "NG",
-  "NU",
-  "NF",
-  "MK",
-  "MP",
-  "NO",
-  "OM",
-  "PK",
-  "PW",
-  "PS",
-  "PA",
-  "PG",
-  "PY",
-  "PE",
-  "PH",
-  "PN",
-  "PL",
-  "PT",
-  "PR",
-  "QA",
-  "RE",
-  "RO",
-  "RU",
-  "RW",
-  "BL",
-  "SH",
-  "KN",
-  "LC",
-  "MF",
-  "PM",
-  "VC",
-  "WS",
-  "SM",
-  "ST",
-  "SA",
-  "SN",
-  "RS",
-  "SC",
-  "SL",
-  "SG",
-  "SX",
-  "SK",
-  "SI",
-  "SB",
-  "SO",
-  "ZA",
-  "GS",
-  "SS",
-  "ES",
-  "LK",
-  "SD",
-  "SR",
-  "SJ",
-  "SE",
-  "CH",
-  "SY",
-  "TW",
-  "TJ",
-  "TZ",
-  "TH",
-  "TL",
-  "TG",
-  "TK",
-  "TO",
-  "TT",
-  "TN",
-  "TR",
-  "TM",
-  "TC",
-  "TV",
-  "UG",
-  "UA",
-  "AE",
-  "GB",
-  "US",
-  "UM",
-  "UY",
-  "UZ",
-  "VU",
-  "VE",
-  "VN",
-  "VG",
-  "VI",
-  "WF",
-  "EH",
-  "YE",
-  "ZM",
-  "ZW"
-];
-
-const lifeExpectancyByCountry: Record<string, number> = {
-  bd: 73,
-  us: 77,
-  gb: 80,
-  ca: 82,
-  de: 81,
-  ng: 61
-};
-
-const countryNameFormatter = new Intl.DisplayNames(["en"], {type: "region"});
-
-const countryOptions = countryCodes.map((code) => {
-  const id = code.toLowerCase();
-  const flag = String.fromCodePoint(
-    ...code.toUpperCase().split("").map((char) => 127397 + char.charCodeAt(0))
-  );
-  return {
-    label: `${flag} ${countryNameFormatter.of(code) ?? code}`,
-    id,
-    expectancy: lifeExpectancyByCountry[id] ?? 80
-  };
-});
-
-type Profile = {
-  name: string;
-  country: string;
-  dob: string;
-  lifeExpectancy?: number;
-  hasCustomExpectancy?: boolean;
-  dotStyle?: "classic" | "rainbow";
-};
-
-const STORAGE_KEY = "life-progress-profile";
+import type {FormEvent} from "react";
+import DotsGrid from "../components/DotsGrid";
+import ProfileDrawer from "../components/ProfileDrawer";
+import {
+  CountryOption,
+  DotStyle,
+  Profile,
+  STORAGE_KEY,
+  countryCodes,
+  lifeExpectancyByCountry
+} from "../lib/lifeDotsData";
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
-}
-
-const rainbowColors = [
-  "bg-red-400",
-  "bg-orange-400",
-  "bg-amber-400",
-  "bg-yellow-400",
-  "bg-lime-400",
-  "bg-green-400",
-  "bg-emerald-400",
-  "bg-teal-400",
-  "bg-cyan-400",
-  "bg-sky-400",
-  "bg-blue-400",
-  "bg-indigo-400",
-  "bg-violet-400",
-  "bg-fuchsia-400",
-  "bg-pink-400",
-  "bg-rose-400"
-];
-
-function DotsGrid({
-  total,
-  filled,
-  dotStyle,
-  perRow,
-  dotSize,
-  gap
-}: {
-  total: number;
-  filled: number;
-  dotStyle: "classic" | "rainbow";
-  perRow: number;
-  dotSize: number;
-  gap: number;
-}) {
-  return (
-    <div
-      className="grid"
-      style={{
-        gridTemplateColumns: `repeat(${perRow}, ${dotSize}px)`,
-        gap: `${gap}px`
-      }}
-    >
-      {Array.from({length: total}).map((_, index) => (
-        <span
-          key={index}
-          style={{height: dotSize, width: dotSize}}
-          className={`${
-            dotStyle === "classic" ? "rounded-full" : "rounded-sm"
-          } ${
-            index < filled
-              ? dotStyle === "classic"
-                ? "bg-neutral-900 dark:bg-white"
-                : rainbowColors[index % rainbowColors.length]
-              : "bg-neutral-200 dark:bg-neutral-800"
-          }`}
-        />
-      ))}
-    </div>
-  );
 }
 
 export default function Home() {
@@ -362,16 +23,39 @@ export default function Home() {
   const [dob, setDob] = useState<Date | null>(null);
   const [lifeExpectancy, setLifeExpectancy] = useState(80);
   const [hasCustomExpectancy, setHasCustomExpectancy] = useState(false);
-  const [dotStyle, setDotStyle] = useState<"classic" | "rainbow">("classic");
+  const [dotStyle, setDotStyle] = useState<DotStyle>("classic");
+  const [language, setLanguage] = useState("default");
   const [draftName, setDraftName] = useState("");
   const [draftCountry, setDraftCountry] = useState<string>("");
   const [draftDob, setDraftDob] = useState<Date | null>(null);
   const [draftLifeExpectancy, setDraftLifeExpectancy] = useState(80);
   const [draftHasCustomExpectancy, setDraftHasCustomExpectancy] = useState(false);
-  const [draftDotStyle, setDraftDotStyle] = useState<"classic" | "rainbow">("classic");
+  const [draftDotStyle, setDraftDotStyle] = useState<DotStyle>("classic");
+  const [draftLanguage, setDraftLanguage] = useState("default");
   const [mounted, setMounted] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [gridMetrics] = useState({dotSize: 10.38, gap: 5});
+
+  const resolvedLanguage = useMemo(() => {
+    if (language !== "default") return language;
+    if (typeof navigator !== "undefined" && navigator.language) return navigator.language;
+    return "en";
+  }, [language]);
+
+  const countryOptions = useMemo<CountryOption[]>(() => {
+    const formatter = new Intl.DisplayNames([resolvedLanguage], {type: "region"});
+    return countryCodes.map((code) => {
+      const id = code.toLowerCase();
+      const flag = String.fromCodePoint(
+        ...code.toUpperCase().split("").map((char) => 127397 + char.charCodeAt(0))
+      );
+      return {
+        label: `${flag} ${formatter.of(code) ?? code}`,
+        id,
+        expectancy: lifeExpectancyByCountry[id] ?? 80
+      };
+    });
+  }, [resolvedLanguage]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -379,6 +63,7 @@ export default function Home() {
     if (!stored) return;
     const profile = JSON.parse(stored) as Profile;
     const storedCountry = profile.country || "";
+    const storedLanguage = profile.language || "default";
     const storedExpectancy =
       typeof profile.lifeExpectancy === "number" ? profile.lifeExpectancy : undefined;
     const defaultExpectancy = storedCountry ? (lifeExpectancyByCountry[storedCountry] ?? 80) : 80;
@@ -398,6 +83,7 @@ export default function Home() {
     if (profile.dotStyle) {
       setDotStyle(profile.dotStyle);
     }
+    setLanguage(storedLanguage);
   }, []);
 
   useEffect(() => {
@@ -412,10 +98,22 @@ export default function Home() {
       dob: dob ? dob.toISOString() : "",
       lifeExpectancy,
       hasCustomExpectancy,
-      dotStyle
+      dotStyle,
+      language
     };
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
-  }, [name, country, dob, lifeExpectancy, dotStyle, hasCustomExpectancy]);
+  }, [name, country, dob, lifeExpectancy, dotStyle, hasCustomExpectancy, language]);
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const nextLanguage =
+      language === "default"
+        ? typeof navigator !== "undefined" && navigator.language
+          ? navigator.language
+          : "en"
+        : language;
+    document.documentElement.setAttribute("lang", nextLanguage);
+  }, [language]);
 
   const countryOption = countryOptions.find((option) => option.id === country);
   useEffect(() => {
@@ -439,9 +137,19 @@ export default function Home() {
     setDraftLifeExpectancy(lifeExpectancy);
     setDraftHasCustomExpectancy(hasCustomExpectancy);
     setDraftDotStyle(dotStyle);
-  }, [isModalOpen, name, country, dob, lifeExpectancy, hasCustomExpectancy, dotStyle]);
+    setDraftLanguage(language);
+  }, [
+    isModalOpen,
+    name,
+    country,
+    dob,
+    lifeExpectancy,
+    hasCustomExpectancy,
+    dotStyle,
+    language
+  ]);
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setName(draftName.trim());
     setCountry(draftCountry);
@@ -449,6 +157,7 @@ export default function Home() {
     setLifeExpectancy(draftLifeExpectancy);
     setHasCustomExpectancy(draftHasCustomExpectancy);
     setDotStyle(draftDotStyle);
+    setLanguage(draftLanguage);
     setIsModalOpen(false);
   };
 
@@ -476,137 +185,19 @@ export default function Home() {
     };
   }, [dob, expectancy]);
 
-  const formCard = (
-    <form
-      onSubmit={handleSubmit}
-      className="rounded-2xl bg-white p-4 shadow-soft dark:bg-neutral-900"
-    >
-      <div className="mb-3 flex items-center justify-between">
-        <div>
-          <h2 className="text-lg font-semibold text-neutral-900 dark:text-white">
-            Profile details
-          </h2>
-          <p className="text-sm text-neutral-500 dark:text-neutral-400">
-            Update your basics one step at a time.
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={() => setIsModalOpen(false)}
-          className="rounded-full border border-neutral-200 px-2 py-1 text-xs font-semibold text-neutral-600 transition hover:border-neutral-300 hover:text-neutral-900 dark:border-neutral-700 dark:text-neutral-300 dark:hover:border-neutral-500 dark:hover:text-white"
-        >
-          Close
-        </button>
-      </div>
-      <div className="grid gap-4">
-        <div>
-          <label className="text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
-            Life expectancy ({draftLifeExpectancy} years)
-          </label>
-          <input
-            type="range"
-            min={1}
-            max={120}
-            step={1}
-            value={draftLifeExpectancy}
-            onChange={(event) => {
-              setDraftHasCustomExpectancy(true);
-              setDraftLifeExpectancy(Number(event.target.value));
-            }}
-            className="mt-2 w-full accent-neutral-900 dark:accent-white"
-          />
-        </div>
-        <div>
-          <label className="text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
-            Date of birth
-          </label>
-          <div className="mt-2">
-            {mounted ? (
-              <DatePicker
-                value={draftDob}
-                onChange={({date}) => {
-                  const nextDate = Array.isArray(date) ? date[0] : (date as Date | null);
-                  setDraftDob(nextDate ?? null);
-                }}
-                placeholder="Date of birth"
-                minDate={new Date(1901, 0, 1)}
-                maxDate={new Date()}
-                overrides={{
-                  Popover: {
-                    props: {
-                      overrides: {
-                        Body: {
-                          style: {
-                            zIndex: 60
-                          }
-                        }
-                      }
-                    }
-                  }
-                }}
-              />
-            ) : (
-              <Input value={draftDob ? draftDob.toISOString().split("T")[0] : ""} disabled />
-            )}
-          </div>
-        </div>
-        <div>
-          <Select
-            options={[
-              {id: "classic", label: "Classic black"},
-              {id: "rainbow", label: "Rainbow box"}
-            ]}
-            value={
-              draftDotStyle
-                ? [
-                    {
-                      id: draftDotStyle,
-                      label: draftDotStyle === "classic" ? "Classic black" : "Rainbow box"
-                    }
-                  ]
-                : []
-            }
-            placeholder="Dot style"
-            clearable={false}
-            onChange={(params) =>
-              setDraftDotStyle((params.value[0]?.id as "classic" | "rainbow") ?? "classic")
-            }
-          />
-        </div>
-        <div className="grid gap-3 sm:grid-cols-2">
-          <Input
-            value={draftName}
-            onChange={(event) => setDraftName((event.target as HTMLInputElement).value)}
-            placeholder="Name"
-            clearable
-          />
-          <Select
-            options={countryOptions}
-            value={countryOptions.filter((option) => option.id === draftCountry)}
-            placeholder="Country"
-            searchable
-            clearable
-            onChange={(params) => {
-              setDraftHasCustomExpectancy(false);
-              setDraftCountry((params.value[0]?.id as string) ?? "");
-            }}
-          />
-        </div>
-      </div>
-      <div className="mt-5 flex justify-end">
-        <button
-          type="submit"
-          className="inline-flex items-center justify-center rounded-full bg-neutral-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-neutral-800 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-100"
-        >
-          Save changes
-        </button>
-      </div>
-    </form>
-  );
+  const handleDraftCountryChange = (value: string) => {
+    setDraftHasCustomExpectancy(false);
+    setDraftCountry(value);
+  };
+
+  const handleDraftLifeExpectancyChange = (value: number) => {
+    setDraftHasCustomExpectancy(true);
+    setDraftLifeExpectancy(value);
+  };
 
   return (
     <main className="min-h-screen py-6">
-      <section className="mx-auto flex w-[860px] flex-col gap-4">
+      <section className="mx-auto flex w-full max-w-[860px] flex-col gap-4 px-6">
         <div className="text-center">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-400">
             Life in Weeks
@@ -640,14 +231,19 @@ export default function Home() {
           </button>
         </div>
 
-        <div className="flex min-h-[100vh] max-h-[calc(100vh-220px)] flex-col rounded-md bg-white p-[30px] dark:bg-neutral-900">
-          <div className="flex flex-wrap justify-end gap-x-3 text-sm font-medium text-neutral-500 dark:text-neutral-400">
-            <span>
-              Weeks: {progress.weeksPassed}/{progress.totalWeeks}
+        <div className="flex min-h-[60vh] max-h-[calc(100vh-220px)] flex-col rounded-2xl border border-neutral-200 bg-white p-6 shadow-soft dark:border-neutral-800 dark:bg-neutral-900">
+          <div className="flex flex-wrap items-center justify-between gap-2 text-sm font-medium text-neutral-500 dark:text-neutral-400">
+            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-400">
+              Life in Weeks
             </span>
-            <span>{progress.percent}%</span>
+            <div className="flex items-center gap-x-3">
+              <span>
+                Weeks: {progress.weeksPassed}/{progress.totalWeeks}
+              </span>
+              <span>{progress.percent}%</span>
+            </div>
           </div>
-          <div className="mt-4 flex-1">
+          <div className="mt-4 flex-1 overflow-auto">
             <DotsGrid
               total={progress.totalWeeks}
               filled={progress.weeksPassed}
@@ -660,19 +256,25 @@ export default function Home() {
         </div>
       </section>
 
-      <Drawer
+      <ProfileDrawer
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        anchor="right"
-        size="420px"
-        animate
-        autoFocus
-        closeable
-        showBackdrop
-        overrides={{}}
-      >
-        <div className="w-full max-w-[520px] p-6">{formCard}</div>
-      </Drawer>
+        mounted={mounted}
+        onSubmit={handleSubmit}
+        draftName={draftName}
+        onDraftNameChange={setDraftName}
+        draftCountry={draftCountry}
+        onDraftCountryChange={handleDraftCountryChange}
+        draftDob={draftDob}
+        onDraftDobChange={setDraftDob}
+        draftLifeExpectancy={draftLifeExpectancy}
+        onDraftLifeExpectancyChange={handleDraftLifeExpectancyChange}
+        draftDotStyle={draftDotStyle}
+        onDraftDotStyleChange={setDraftDotStyle}
+        draftLanguage={draftLanguage}
+        onDraftLanguageChange={setDraftLanguage}
+        countryOptions={countryOptions}
+      />
     </main>
   );
 }

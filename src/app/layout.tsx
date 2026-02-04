@@ -4,7 +4,8 @@ import Providers from "../components/Providers";
 
 export const metadata: Metadata = {
   title: "Life Dots - Fahim Reza",
-  description: "Track the passage of time with a minimalist life dots view"
+  description: "Track the passage of time with a minimalist life dots view",
+  keywords: ["life dots", "Fahim Reza"]
 };
 
 export default function RootLayout({children}: {children: React.ReactNode}) {
