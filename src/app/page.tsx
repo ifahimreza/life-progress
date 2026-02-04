@@ -508,7 +508,8 @@ export default function Home() {
     <main className="px-6 py-12">
       <Dialog.Root open={isModalOpen} onOpenChange={setIsModalOpen}>
         <section className="mx-auto flex w-full max-w-[820px] flex-col gap-6">
-          <div className="flex justify-end">
+          <div className="flex items-center justify-between">
+            <h1 class="text-sm">Life Dots</h1>
             <Dialog.Trigger
               className="inline-flex items-center justify-center rounded-full border border-neutral-200 p-2 text-neutral-600 transition hover:border-neutral-300 hover:text-neutral-900 dark:border-neutral-700 dark:text-neutral-300 dark:hover:border-neutral-500 dark:hover:text-white"
               aria-label="Open profile settings"
