@@ -100,31 +100,48 @@ export function useSupabaseAuth({
     }
 
     const loadSession = async () => {
-      const {data, error} = await supabase.auth.getSession();
-      if (!isActive) return;
-      if (error) {
+      try {
+        const {data, error} = await supabase.auth.getSession();
+        if (!isActive) return;
+        if (error) {
+          clearAuthState();
+          setIsLoading(false);
+          return;
+        }
+
+        setSession(data.session);
+        if (data.session?.user?.id) {
+          await refreshProfile(data.session.user.id);
+        } else {
+          setHasAccess(false);
+          setProfile(null);
+          setProfileLoaded(false);
+        }
+        setIsLoading(false);
+      } catch (err) {
+        if (!isActive) return;
+        if (err instanceof DOMException && err.name === "AbortError") {
+          return;
+        }
         clearAuthState();
         setIsLoading(false);
-        return;
       }
-
-      setSession(data.session);
-      if (data.session?.user?.id) {
-        await refreshProfile(data.session.user.id);
-      } else {
-        setHasAccess(false);
-        setProfile(null);
-        setProfileLoaded(false);
-      }
-      setIsLoading(false);
     };
 
     const {data: subscription} = supabase.auth.onAuthStateChange(
       async (_event, nextSession) => {
-        setSession(nextSession);
-        if (nextSession?.user?.id) {
-          await refreshProfile(nextSession.user.id);
-        } else {
+        try {
+          setSession(nextSession);
+          if (nextSession?.user?.id) {
+            await refreshProfile(nextSession.user.id);
+          } else {
+            clearAuthState();
+          }
+        } catch (err) {
+          if (!isActive) return;
+          if (err instanceof DOMException && err.name === "AbortError") {
+            return;
+          }
           clearAuthState();
         }
       }
