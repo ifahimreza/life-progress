@@ -3,6 +3,15 @@
  * Each key explains how and why it is used so you can safely adjust it.
  */
 const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+const domainName =
+	process.env.NEXT_PUBLIC_DOMAIN ??
+	(() => {
+		try {
+			return new URL(appUrl).host;
+		} catch {
+			return appUrl;
+		}
+	})();
 
 const config = {
 	// Visible app name used in titles and UI.
@@ -17,6 +26,9 @@ const config = {
 
 	// Public app URL used for canonical links and auth callbacks.
 	appUrl,
+
+	// Root domain (no protocol) used for SEO.
+	domainName,
 
 	// Support contact shown in emails or help links.
 	supportEmail: process.env.SUPPORT_EMAIL ?? '',
