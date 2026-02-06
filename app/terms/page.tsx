@@ -52,7 +52,7 @@ export default function TermsPage() {
             <div className="grid gap-2">
               <h2 className="text-sm font-semibold text-main">4. Paid Plans</h2>
               <p>
-                Pro features require payment. Prices, billing terms, and taxes
+                Plus features require payment. Prices, billing terms, and taxes
                 are shown at checkout.
               </p>
               <p>

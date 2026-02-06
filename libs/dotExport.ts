@@ -19,8 +19,12 @@ type CardExportOptions = DotExportOptions & {
   weeksText: string;
   percentText: string;
   footerText?: string;
+  footerName?: string;
   footerFlagUrl?: string;
   footerFlagSize?: number;
+  fontFamily?: string;
+  textColor?: string;
+  mutedColor?: string;
   padding?: number;
   headerGap?: number;
   footerGap?: number;
@@ -188,8 +192,12 @@ export async function renderCardToCanvas({
   weeksText,
   percentText,
   footerText,
+  footerName,
   footerFlagUrl,
   footerFlagSize,
+  fontFamily = "Arial, sans-serif",
+  textColor,
+  mutedColor,
   padding = 24,
   headerGap = 16,
   footerGap = 16,
@@ -207,8 +215,16 @@ export async function renderCardToCanvas({
   const titleFontSize = 12;
   const statsFontSize = 12;
   const footerFontSize = 11;
+  const footerNameFontSize = 24;
   const headerHeight = Math.max(titleFontSize, statsFontSize);
-  const footerHeight = footerText ? footerGap + footerFontSize : 0;
+  const cleanedFooterName = footerName?.trim();
+  const hasFooterText = Boolean(footerText);
+  const hasFooterName = Boolean(cleanedFooterName);
+  const footerTextHeight = hasFooterText ? footerGap + footerFontSize : 0;
+  const footerNameHeight = hasFooterName
+    ? (hasFooterText ? 10 : footerGap) + footerNameFontSize
+    : 0;
+  const footerHeight = footerTextHeight + footerNameHeight;
   const cardWidth = gridWidth + padding * 2;
   const cardHeight = padding * 2 + headerHeight + headerGap + gridHeight + footerHeight;
 
@@ -226,12 +242,15 @@ export async function renderCardToCanvas({
   drawRoundedStrokeRect(ctx, 0.5, 0.5, cardWidth - 1, cardHeight - 1, radius);
 
   ctx.textBaseline = "top";
-  ctx.fillStyle = palette.muted;
-  ctx.font = `600 ${titleFontSize}px Arial, sans-serif`;
+  const primaryTextColor = textColor ?? palette.text;
+  const secondaryTextColor = mutedColor ?? palette.muted;
+
+  ctx.fillStyle = secondaryTextColor;
+  ctx.font = `600 ${titleFontSize}px ${fontFamily}`;
   ctx.fillText(title, padding, padding);
 
-  ctx.font = `600 ${statsFontSize}px Arial, sans-serif`;
-  ctx.fillStyle = palette.text;
+  ctx.font = `600 ${statsFontSize}px ${fontFamily}`;
+  ctx.fillStyle = primaryTextColor;
   ctx.textAlign = "right";
   const statsY = padding;
   const percentWidth = ctx.measureText(percentText).width;
@@ -261,10 +280,12 @@ export async function renderCardToCanvas({
     }
   }
 
+  let footerYCursor = gridTop + gridHeight;
+
   if (footerText) {
-    ctx.font = `600 ${footerFontSize}px Arial, sans-serif`;
-    ctx.fillStyle = palette.muted;
-    const footerY = gridTop + gridHeight + footerGap;
+    ctx.font = `600 ${footerFontSize}px ${fontFamily}`;
+    ctx.fillStyle = secondaryTextColor;
+    const footerY = footerYCursor + footerGap;
     const textWidth = ctx.measureText(footerText).width;
     let flagImage: HTMLImageElement | null = null;
     if (footerFlagUrl) {
@@ -284,6 +305,21 @@ export async function renderCardToCanvas({
     }
     ctx.textAlign = "left";
     ctx.fillText(footerText, startX + (flagImage ? iconSize + iconGap : 0), footerY);
+    footerYCursor = footerY + footerFontSize;
+  }
+
+  if (cleanedFooterName) {
+    let nameFontSize = footerNameFontSize;
+    ctx.font = `800 ${nameFontSize}px Arial, sans-serif`;
+    while (ctx.measureText(cleanedFooterName).width > cardWidth - padding * 2 && nameFontSize > 14) {
+      nameFontSize -= 1;
+      ctx.font = `800 ${nameFontSize}px ${fontFamily}`;
+    }
+    const nameY = footerYCursor + (hasFooterText ? 10 : footerGap);
+    ctx.textAlign = "center";
+    ctx.fillStyle = primaryTextColor;
+    ctx.fillText(cleanedFooterName.toUpperCase(), cardWidth / 2, nameY);
+    ctx.textAlign = "left";
   }
 
   return canvas;

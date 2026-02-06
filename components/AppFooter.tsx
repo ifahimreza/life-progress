@@ -6,6 +6,7 @@ import Link from "next/link";
 import type {UiStrings} from "../libs/i18n";
 import type {LanguageId, SelectOption} from "../libs/lifeDotsData";
 import {useSupabaseAuth} from "../libs/useSupabaseAuth";
+import TurnstileWidget from "./TurnstileWidget";
 
 type AppFooterProps = {
   strings: UiStrings;
@@ -28,8 +29,10 @@ export default function AppFooter({
   const [isSendingContact, setIsSendingContact] = useState(false);
   const [contactStatus, setContactStatus] = useState<string | null>(null);
   const [contactError, setContactError] = useState<string | null>(null);
+  const [contactCaptchaToken, setContactCaptchaToken] = useState<string | null>(null);
   const [defaultLanguageLabel, setDefaultLanguageLabel] = useState(strings.languageEnglish);
   const languageMenuRef = useRef<HTMLDivElement | null>(null);
+  const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim() ?? "";
 
   const isAdmin =
     session?.user?.app_metadata?.role === "admin" ||
@@ -103,6 +106,10 @@ export default function AppFooter({
       setContactError("Please enter your email and a message.");
       return;
     }
+    if (!contactCaptchaToken) {
+      setContactError("Please complete the security check.");
+      return;
+    }
 
     setIsSendingContact(true);
     setContactError(null);
@@ -115,7 +122,8 @@ export default function AppFooter({
         body: JSON.stringify({
           email: contactEmail.trim(),
           message: contactMessage.trim(),
-          page: typeof window !== "undefined" ? window.location.pathname : ""
+          page: typeof window !== "undefined" ? window.location.pathname : "",
+          turnstileToken: contactCaptchaToken
         })
       });
 
@@ -125,6 +133,7 @@ export default function AppFooter({
       }
 
       setContactMessage("");
+      setContactCaptchaToken(null);
       setContactStatus("Thanks. Your message has been sent.");
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unable to send message.";
@@ -136,8 +145,8 @@ export default function AppFooter({
 
   return (
     <>
-      <footer className="mx-auto w-full max-w-[860px] px-4 pb-6 pt-3 sm:px-6">
-        <div className="border-t border-surface pt-4">
+      <footer className="mx-auto w-full max-w-[860px] px-4 pb-7 pt-5 sm:px-6">
+        <div className="pt-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
               <div className="text-sm font-semibold text-main">DotSpan</div>
@@ -146,12 +155,12 @@ export default function AppFooter({
                   <button
                     type="button"
                     onClick={() => setIsLanguageOpen((current) => !current)}
-                    className="inline-flex items-center gap-2 rounded-md border border-neutral-200 bg-white px-2.5 py-1.5 text-xs font-medium text-main transition hover:border-neutral-400"
+                    className="inline-flex items-center gap-1.5 rounded-md border border-surface bg-white px-2.5 py-1 text-[11px] font-medium text-muted transition hover:text-main"
                     aria-haspopup="menu"
                     aria-expanded={isLanguageOpen}
                     aria-label={strings.languageLabel}
                   >
-                    <svg viewBox="0 0 24 24" aria-hidden="true" className="h-3.5 w-3.5 text-neutral-700">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" className="h-3.5 w-3.5">
                       <path
                         fill="none"
                         stroke="currentColor"
@@ -165,7 +174,7 @@ export default function AppFooter({
                     <svg
                       viewBox="0 0 24 24"
                       aria-hidden="true"
-                      className={`h-3.5 w-3.5 text-neutral-500 transition ${isLanguageOpen ? "rotate-180" : ""}`}
+                      className={`h-3.5 w-3.5 transition ${isLanguageOpen ? "rotate-180" : ""}`}
                     >
                       <path
                         fill="none"
@@ -178,7 +187,7 @@ export default function AppFooter({
                     </svg>
                   </button>
                   {isLanguageOpen ? (
-                    <div className="absolute bottom-full left-0 z-30 mb-2 w-44 rounded-xl border border-neutral-200 bg-white p-1.5">
+                    <div className="absolute bottom-full left-0 z-30 mb-2 w-44 rounded-lg border border-surface bg-white p-1">
                       {languageOptions?.map((option) => (
                         <button
                           key={option.id}
@@ -187,8 +196,8 @@ export default function AppFooter({
                             onLanguageChange?.(option.id as LanguageId);
                             setIsLanguageOpen(false);
                           }}
-                          className={`flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-left text-xs transition hover:bg-neutral-50 ${
-                            option.id === languageValue ? "text-main" : "text-neutral-700"
+                          className={`flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-left text-xs transition hover:bg-neutral-50 ${
+                            option.id === languageValue ? "text-main" : "text-muted"
                           }`}
                           role="menuitem"
                         >
@@ -202,14 +211,14 @@ export default function AppFooter({
               ) : null}
             </div>
 
-            <div className="flex flex-wrap items-center gap-3 text-xs font-medium text-muted">
-              <Link href="/privacy" className="transition hover:text-neutral-700">
+            <nav className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-medium text-muted">
+              <Link href="/privacy" className="transition hover:text-main">
                 Privacy
               </Link>
-              <Link href="/terms" className="transition hover:text-neutral-700">
+              <Link href="/terms" className="transition hover:text-main">
                 Terms
               </Link>
-              <Link href="/refund" className="transition hover:text-neutral-700">
+              <Link href="/refund" className="transition hover:text-main">
                 Refund
               </Link>
               <button
@@ -218,40 +227,29 @@ export default function AppFooter({
                   setIsContactOpen(true);
                   setContactError(null);
                   setContactStatus(null);
+                  setContactCaptchaToken(null);
                 }}
-                className="transition hover:text-neutral-700"
+                className="transition hover:text-main"
               >
                 Contact
               </button>
               {userId ? (
-                <Link href="/dashboard" className="transition hover:text-neutral-700">
+                <Link href="/dashboard" className="transition hover:text-main">
                   Dashboard
                 </Link>
               ) : (
-                <Link href="/login" className="transition hover:text-neutral-700">
+                <Link href="/login" className="transition hover:text-main">
                   Login
                 </Link>
               )}
               {isAdmin ? (
-                <Link href="/admin" className="transition hover:text-neutral-700">
+                <Link href="/admin" className="transition hover:text-main">
                   Admin
                 </Link>
               ) : null}
-            </div>
+            </nav>
           </div>
 
-          <div className="mt-3 text-center text-[11px] text-subtle">
-            {strings.inspiredByPrefix ? `${strings.inspiredByPrefix} ` : ""}
-            <a
-              href="https://waitbutwhy.com/2014/05/life-weeks.html"
-              target="_blank"
-              rel="noreferrer"
-              className="transition hover:text-neutral-600"
-            >
-              {strings.inspiredByTitle}
-            </a>
-            {strings.inspiredBySuffix ? ` ${strings.inspiredBySuffix}` : ""}
-          </div>
         </div>
       </footer>
 
@@ -299,6 +297,22 @@ export default function AppFooter({
                 required
               />
 
+              {turnstileSiteKey ? (
+                <div className="pt-1">
+                  <TurnstileWidget
+                    siteKey={turnstileSiteKey}
+                    onTokenChange={(token) => {
+                      setContactCaptchaToken(token);
+                      if (token) setContactError(null);
+                    }}
+                  />
+                </div>
+              ) : (
+                <p className="text-sm text-rose-700">
+                  Security check unavailable. Set NEXT_PUBLIC_TURNSTILE_SITE_KEY.
+                </p>
+              )}
+
               {contactStatus ? (
                 <p className="text-sm text-emerald-700">{contactStatus}</p>
               ) : null}
@@ -308,8 +322,8 @@ export default function AppFooter({
 
               <button
                 type="submit"
-                disabled={isSendingContact}
-                className="mt-1 w-full rounded-xl bg-[#4e55e0] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#434ad0] disabled:cursor-not-allowed disabled:bg-neutral-300"
+                disabled={isSendingContact || !contactCaptchaToken}
+                className="mt-1 w-full rounded-xl bg-[#00c565] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#00ae59] disabled:cursor-not-allowed disabled:bg-neutral-300"
               >
                 {isSendingContact ? "Sending..." : "Send message"}
               </button>
@@ -320,4 +334,3 @@ export default function AppFooter({
     </>
   );
 }
-

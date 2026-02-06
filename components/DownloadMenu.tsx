@@ -9,6 +9,7 @@ type DownloadMenuProps = {
   strings: UiStrings;
   buttonContent?: ReactNode;
   buttonAriaLabel?: string;
+  buttonTooltip?: string;
   buttonClassName?: string;
   buttonProps?: HTMLAttributes<HTMLSpanElement>;
 };
@@ -20,6 +21,7 @@ export default function DownloadMenu({
   strings,
   buttonContent,
   buttonAriaLabel,
+  buttonTooltip,
   buttonClassName,
   buttonProps
 }: DownloadMenuProps) {
@@ -46,6 +48,8 @@ export default function DownloadMenu({
         <span
           {...restButtonProps}
           aria-label={buttonAriaLabel ?? strings.download}
+          title={buttonTooltip}
+          data-tip={buttonTooltip}
           className={mergedButtonClassName}
         >
           {buttonContent ?? strings.download}

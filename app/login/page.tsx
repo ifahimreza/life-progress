@@ -169,7 +169,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={!email.trim() || isSubmitting || !isCaptchaReady}
-            className="mt-2 w-full rounded-xl bg-[#4e55e0] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#434ad0] disabled:cursor-not-allowed disabled:bg-neutral-300"
+            className="mt-2 w-full rounded-xl bg-[#00c565] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#00ae59] disabled:cursor-not-allowed disabled:bg-neutral-300"
           >
             {isSubmitting ? "Sending..." : "Continue"}
           </button>

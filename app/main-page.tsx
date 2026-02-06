@@ -4,6 +4,7 @@ import {useEffect, useMemo, useRef, useState} from "react";
 import {useRouter, useSearchParams} from "next/navigation";
 import AppFooter from "../components/AppFooter";
 import AppHeader from "../components/AppHeader";
+import ExportModal from "../components/ExportModal";
 import FlagIcon from "../components/FlagIcon";
 import ProfileDrawer from "../components/ProfileDrawer";
 import ProgressCard from "../components/ProgressCard";
@@ -15,7 +16,6 @@ import {
 import {countryCodes, lifeExpectancyByCountry} from "../data/countries";
 import {
   UiStrings,
-  formatLifeExpectancy,
   formatLocalePercent,
   buildDotStyleOptions,
   buildLanguageOptions,
@@ -29,23 +29,17 @@ import {
 import useDotMetrics from "../libs/useDotMetrics";
 import {getViewState} from "../libs/views";
 import {
-  buildExportFilename,
-  downloadCanvasAsJpg,
-  downloadCanvasAsPng,
-  openPrintWindow,
-  renderCardToCanvas
-} from "../libs/dotExport";
-import {getFlagSvgUrl} from "../libs/flags";
-import {
+  BASIC_THEME_IDS,
   DEFAULT_THEME_ID,
   applyTheme,
+  getBasicThemes,
   buildThemeOptions,
   getTheme,
   THEMES
 } from "../libs/themes";
 import {useProfileState} from "../libs/useProfileState";
 import {useDraftProfile} from "../libs/useDraftProfile";
-import {toProfileState} from "../libs/profile";
+import {DEFAULT_PROFILE_STATE, toProfileState} from "../libs/profile";
 import {useSupabaseAuth} from "../libs/useSupabaseAuth";
 
 function clamp(value: number, min: number, max: number) {
@@ -55,6 +49,8 @@ function clamp(value: number, min: number, max: number) {
 type FaqItem = {question: string; answer: string};
 
 type LandingCopy = {
+  introTitle: string;
+  introBody: string;
   aboutLabel: string;
   aboutTitle: string;
   aboutBody: string;
@@ -69,15 +65,18 @@ type LandingCopy = {
 
 const LANDING_COPY: Record<Exclude<LanguageId, "default">, LandingCopy> = {
   en: {
-    aboutLabel: "About life",
-    aboutTitle: "DotSpan makes Your Life in Week simple to see",
+    introTitle: "Your Life in Weeks",
+    introBody:
+      "Your Life in Weeks turns abstract time into something you can see. DotSpan visualizes each week as a dot, so long-term decisions feel clearer and easier to act on.",
+    aboutLabel: "Time in perspective",
+    aboutTitle: "See your life timeline in one clean view",
     aboutBody:
-      "DotSpan is a clear timeline for real life. You open it, see where your time goes, and choose your next step with less stress and better focus.",
+      "Each dot represents one week. Filled dots show time already lived, and open dots show what remains based on your date of birth and selected life expectancy.",
     basicTitle: "Basic features",
     basicItems: [
-      "Life in weeks, months, and years",
+      "Your Life in Weeks, months, and years views",
       "Country-based life expectancy baseline",
-      "Localized language and number display",
+      "Localized language and number formatting",
       "Private dashboard with Google sign-in"
     ],
     premiumTitle: "Premium features",
@@ -92,7 +91,7 @@ const LANDING_COPY: Record<Exclude<LanguageId, "default">, LandingCopy> = {
       {
         question: "What is DotSpan?",
         answer:
-          "DotSpan is a lightweight time perspective app inspired by the idea of Your Life in Week."
+          "DotSpan is a lifestyle app that helps you visualize Your Life in Weeks and stay accountable to the time you have."
       },
       {
         question: "Who should use DotSpan?",
@@ -105,16 +104,19 @@ const LANDING_COPY: Record<Exclude<LanguageId, "default">, LandingCopy> = {
           "Yes. Private pages are protected by login. Public sharing only happens when you explicitly create a share link."
       },
       {
-        question: "What do I get with Pro?",
+        question: "What do I get with Plus?",
         answer:
-          "Pro includes premium themes, PDF print, weekly reminders, and share tools."
+          "Plus includes premium themes, PDF print, weekly reminders, and share tools."
       }
     ],
     resourcesTitle: "Resources"
   },
   es: {
+    introTitle: "Your Life in Weeks",
+    introBody:
+      "La idea es simple: si la vida se muestra en semanas, el tiempo se vuelve visible y más fácil de entender. DotSpan es nuestra versión práctica de esa perspectiva, inspirada en Tim Urban (Wait But Why).",
     aboutLabel: "Sobre la vida",
-    aboutTitle: "DotSpan hace fácil ver Your Life in Week",
+    aboutTitle: "DotSpan hace fácil ver Your Life in Weeks",
     aboutBody:
       "DotSpan es una línea de tiempo clara. Abres la app, ves dónde va tu tiempo y eliges tu siguiente paso con menos ruido.",
     basicTitle: "Funciones básicas",
@@ -133,16 +135,19 @@ const LANDING_COPY: Record<Exclude<LanguageId, "default">, LandingCopy> = {
     ],
     faqTitle: "Preguntas frecuentes",
     faqItems: [
-      {question: "¿Qué es DotSpan?", answer: "DotSpan es una app visual de perspectiva del tiempo inspirada en Your Life in Week."},
+      {question: "¿Qué es DotSpan?", answer: "DotSpan es una app visual de perspectiva del tiempo inspirada en Your Life in Weeks."},
       {question: "¿Para quién es?", answer: "Para personas que quieren responsabilidad simple en su vida diaria."},
       {question: "¿Mis datos son privados?", answer: "Sí. Las páginas privadas requieren inicio de sesión."},
-      {question: "¿Qué incluye Pro?", answer: "Temas premium, PDF, recordatorios semanales y enlaces para compartir."}
+      {question: "¿Qué incluye Plus?", answer: "Temas premium, PDF, recordatorios semanales y enlaces para compartir."}
     ],
     resourcesTitle: "Recursos"
   },
   fr: {
+    introTitle: "Your Life in Weeks",
+    introBody:
+      "L’idée est simple : si la vie est affichée en semaines, le temps devient visible et plus concret. DotSpan est notre version pratique de cette perspective, inspirée des écrits de Tim Urban (Wait But Why).",
     aboutLabel: "À propos de la vie",
-    aboutTitle: "DotSpan rend Your Life in Week facile à visualiser",
+    aboutTitle: "DotSpan rend Your Life in Weeks facile à visualiser",
     aboutBody:
       "DotSpan est une vue simple du temps. Vous voyez votre progression et décidez la prochaine action avec clarté.",
     basicTitle: "Fonctionnalités de base",
@@ -161,16 +166,19 @@ const LANDING_COPY: Record<Exclude<LanguageId, "default">, LandingCopy> = {
     ],
     faqTitle: "FAQ",
     faqItems: [
-      {question: "Qu’est-ce que DotSpan ?", answer: "DotSpan est une application visuelle inspirée par l’idée Your Life in Week."},
+      {question: "Qu’est-ce que DotSpan ?", answer: "DotSpan est une application visuelle inspirée par l’idée Your Life in Weeks."},
       {question: "À qui s’adresse DotSpan ?", answer: "Aux personnes qui veulent une responsabilisation simple et régulière."},
       {question: "Mes données sont-elles privées ?", answer: "Oui. Les pages privées sont protégées par authentification."},
-      {question: "Que comprend Pro ?", answer: "Thèmes premium, PDF, rappels hebdomadaires et partage."}
+      {question: "Que comprend Plus ?", answer: "Thèmes premium, PDF, rappels hebdomadaires et partage."}
     ],
     resourcesTitle: "Ressources"
   },
   ja: {
+    introTitle: "Your Life in Weeks",
+    introBody:
+      "考え方はシンプルです。人生を週単位で可視化すると、時間を直感的に理解しやすくなります。DotSpan は Tim Urban（Wait But Why）の発想に着想を得た実用版です。",
     aboutLabel: "人生について",
-    aboutTitle: "DotSpan で Your Life in Week を直感的に見える化",
+    aboutTitle: "DotSpan で Your Life in Weeks を直感的に見える化",
     aboutBody:
       "DotSpan は時間の見通しをシンプルにします。今どこにいるかが分かり、次の一歩を決めやすくなります。",
     basicTitle: "基本機能",
@@ -189,16 +197,19 @@ const LANDING_COPY: Record<Exclude<LanguageId, "default">, LandingCopy> = {
     ],
     faqTitle: "よくある質問",
     faqItems: [
-      {question: "DotSpan とは？", answer: "Your Life in Week の考え方に着想を得た、時間の可視化アプリです。"},
+      {question: "DotSpan とは？", answer: "Your Life in Weeks の考え方に着想を得た、時間の可視化アプリです。"},
       {question: "誰向けですか？", answer: "日常でやさしい自己管理をしたい人向けです。"},
       {question: "データは非公開ですか？", answer: "はい。非公開ページはログインで保護されます。"},
-      {question: "Pro で何が増えますか？", answer: "テーマ、PDF、週次リマインダー、共有機能です。"}
+      {question: "Plus で何が増えますか？", answer: "テーマ、PDF、週次リマインダー、共有機能です。"}
     ],
     resourcesTitle: "参考リンク"
   },
   hi: {
+    introTitle: "Your Life in Weeks",
+    introBody:
+      "विचार सीधा है: जब जीवन को सप्ताहों में देखते हैं, समय साफ़ दिखता है और समझना आसान होता है। DotSpan उसी दृष्टिकोण का हमारा practical रूप है, जो Tim Urban (Wait But Why) से प्रेरित है।",
     aboutLabel: "जीवन के बारे में",
-    aboutTitle: "DotSpan के साथ Your Life in Week को साफ़ देखें",
+    aboutTitle: "DotSpan के साथ Your Life in Weeks को साफ़ देखें",
     aboutBody:
       "DotSpan समय को आसान बनाता है। आप तुरंत देख सकते हैं कि आप कहाँ हैं और अगला कदम क्या होना चाहिए।",
     basicTitle: "बेसिक फीचर्स",
@@ -217,16 +228,19 @@ const LANDING_COPY: Record<Exclude<LanguageId, "default">, LandingCopy> = {
     ],
     faqTitle: "सामान्य प्रश्न",
     faqItems: [
-      {question: "DotSpan क्या है?", answer: "यह Your Life in Week विचार से प्रेरित समय-दृष्टि ऐप है।"},
+      {question: "DotSpan क्या है?", answer: "यह Your Life in Weeks विचार से प्रेरित समय-दृष्टि ऐप है।"},
       {question: "किसके लिए है?", answer: "उन लोगों के लिए जो आसान accountability चाहते हैं।"},
       {question: "क्या डेटा प्राइवेट है?", answer: "हाँ, प्राइवेट पेज लॉगिन से सुरक्षित हैं।"},
-      {question: "Pro में क्या मिलता है?", answer: "प्रीमियम थीम, PDF, साप्ताहिक रिमाइंडर और शेयर टूल।"}
+      {question: "Plus में क्या मिलता है?", answer: "प्रीमियम थीम, PDF, साप्ताहिक रिमाइंडर और शेयर टूल।"}
     ],
     resourcesTitle: "संसाधन"
   },
   bn: {
+    introTitle: "Your Life in Weeks",
+    introBody:
+      "ধারণাটি সহজ: জীবনকে সপ্তাহে দেখালে সময় চোখে দেখা যায় এবং বোঝা সহজ হয়। DotSpan হলো সেই দৃষ্টিভঙ্গির আমাদের ব্যবহারযোগ্য সংস্করণ, Tim Urban (Wait But Why) থেকে অনুপ্রাণিত।",
     aboutLabel: "জীবন সম্পর্কে",
-    aboutTitle: "DotSpan দিয়ে Your Life in Week সহজে দেখুন",
+    aboutTitle: "DotSpan দিয়ে Your Life in Weeks সহজে দেখুন",
     aboutBody:
       "DotSpan সময়কে পরিষ্কারভাবে দেখায়। আপনি কোথায় আছেন বুঝে পরের পদক্ষেপ ঠিক করতে পারেন।",
     basicTitle: "বেসিক ফিচার",
@@ -245,10 +259,10 @@ const LANDING_COPY: Record<Exclude<LanguageId, "default">, LandingCopy> = {
     ],
     faqTitle: "FAQ",
     faqItems: [
-      {question: "DotSpan কী?", answer: "Your Life in Week ধারণা থেকে তৈরি একটি টাইম পার্সপেক্টিভ অ্যাপ।"},
+      {question: "DotSpan কী?", answer: "Your Life in Weeks ধারণা থেকে তৈরি একটি টাইম পার্সপেক্টিভ অ্যাপ।"},
       {question: "কারা ব্যবহার করবে?", answer: "যারা সহজ accountability চান তাদের জন্য।"},
       {question: "ডাটা কি প্রাইভেট?", answer: "হ্যাঁ, প্রাইভেট পেজ লগইন দিয়ে সুরক্ষিত।"},
-      {question: "Pro তে কী আছে?", answer: "প্রিমিয়াম থিম, PDF, সাপ্তাহিক রিমাইন্ডার ও শেয়ার টুল।"}
+      {question: "Plus তে কী আছে?", answer: "প্রিমিয়াম থিম, PDF, সাপ্তাহিক রিমাইন্ডার ও শেয়ার টুল।"}
     ],
     resourcesTitle: "রিসোর্স"
   }
@@ -258,6 +272,7 @@ export default function MainPage() {
   const {profileState, setProfileState, updateProfile, hasHydrated} = useProfileState();
   const [mounted, setMounted] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const gridContainerRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -272,7 +287,7 @@ export default function MainPage() {
     signInWithGoogle,
     signOut
   } = useSupabaseAuth({redirectPath: "/", fetchProfile: true});
-  const {draft, updateDraft} = useDraftProfile(profileState, isModalOpen);
+  const {draft, setDraft, updateDraft} = useDraftProfile(profileState, isModalOpen);
 
   const {
     name,
@@ -319,12 +334,15 @@ export default function MainPage() {
   const dotStyleOptions = useMemo(() => buildDotStyleOptions(strings), [strings]);
   const viewModeOptions = useMemo(() => buildViewModeOptions(strings), [strings]);
   const availableThemes = useMemo(
-    () => (hasAccess ? THEMES : [getTheme(DEFAULT_THEME_ID)]),
-    [hasAccess]
+    () =>
+      ["aurora", "sunset", "classic"]
+        .map((id) => THEMES.find((theme) => theme.id === id))
+        .filter((theme): theme is (typeof THEMES)[number] => Boolean(theme)),
+    []
   );
   const themeOptions = useMemo(
-    () => buildThemeOptions(availableThemes, strings.themeLabel),
-    [availableThemes, strings.themeLabel]
+    () => buildThemeOptions(availableThemes),
+    [availableThemes]
   );
   const activeTheme = useMemo(() => getTheme(themeId), [themeId]);
 
@@ -357,11 +375,10 @@ export default function MainPage() {
   }, [activeTheme]);
 
   useEffect(() => {
-    if (hasAccess) return;
-    if (themeId !== DEFAULT_THEME_ID) {
+    if (!BASIC_THEME_IDS.includes(themeId)) {
       updateProfile({themeId: DEFAULT_THEME_ID});
     }
-  }, [hasAccess, themeId, updateProfile]);
+  }, [themeId, updateProfile]);
 
   useEffect(() => {
     if (!hasHydrated) return;
@@ -418,6 +435,20 @@ export default function MainPage() {
       name: draftName.trim()
     });
     setIsModalOpen(false);
+  };
+
+  const handleResetDraft = () => {
+    setDraft((prev) => ({
+      ...prev,
+      name: DEFAULT_PROFILE_STATE.name,
+      country: DEFAULT_PROFILE_STATE.country,
+      dob: DEFAULT_PROFILE_STATE.dob,
+      lifeExpectancy: DEFAULT_PROFILE_STATE.lifeExpectancy,
+      hasCustomExpectancy: DEFAULT_PROFILE_STATE.hasCustomExpectancy,
+      dotStyle: DEFAULT_PROFILE_STATE.dotStyle,
+      themeId: DEFAULT_PROFILE_STATE.themeId,
+      viewMode: DEFAULT_PROFILE_STATE.viewMode
+    }));
   };
 
   const expectancy = clamp(lifeExpectancy, 1, 120);
@@ -489,14 +520,6 @@ export default function MainPage() {
     await signOut();
   };
 
-  const flagCode = countryOption?.countryCode;
-  const lifeExpectancyText = formatLifeExpectancy(
-    strings,
-    expectancy,
-    resolvedLocale
-  );
-  const lifeExpectancyLine = lifeExpectancyText;
-  const flagUrl = flagCode ? getFlagSvgUrl(flagCode) : "";
   const progressLabel = formatProgress(
     strings,
     viewMode,
@@ -506,66 +529,8 @@ export default function MainPage() {
   );
   const percentLabel = formatLocalePercent(viewState.percent, resolvedLocale);
 
-  const handleDownloadPng = async () => {
-    const canvas = await renderCardToCanvas({
-      total: viewState.totalUnits,
-      filled: viewState.unitsPassed,
-      perRow: viewState.perRow,
-      dotStyle,
-      theme: activeTheme,
-      dotSize: gridMetrics.dotSize,
-      gap: gridMetrics.gap,
-      title: viewTitle,
-      weeksText: progressLabel,
-      percentText: percentLabel,
-      footerText: lifeExpectancyLine,
-      footerFlagUrl: flagUrl,
-      scale: 3
-    });
-    downloadCanvasAsPng(canvas, buildExportFilename(name, "png"));
-  };
-
-  const handleDownloadJpg = async () => {
-    const canvas = await renderCardToCanvas({
-      total: viewState.totalUnits,
-      filled: viewState.unitsPassed,
-      perRow: viewState.perRow,
-      dotStyle,
-      theme: activeTheme,
-      dotSize: gridMetrics.dotSize,
-      gap: gridMetrics.gap,
-      title: viewTitle,
-      weeksText: progressLabel,
-      percentText: percentLabel,
-      footerText: lifeExpectancyLine,
-      footerFlagUrl: flagUrl,
-      scale: 3
-    });
-    downloadCanvasAsJpg(canvas, buildExportFilename(name, "jpg"));
-  };
-
-  const handleDownloadPdf = async () => {
-    const canvas = await renderCardToCanvas({
-      total: viewState.totalUnits,
-      filled: viewState.unitsPassed,
-      perRow: viewState.perRow,
-      dotStyle,
-      theme: activeTheme,
-      dotSize: gridMetrics.dotSize,
-      gap: gridMetrics.gap,
-      title: viewTitle,
-      weeksText: progressLabel,
-      percentText: percentLabel,
-      footerText: lifeExpectancyLine,
-      footerFlagUrl: flagUrl,
-      scale: 4
-    });
-    const imageUrl = canvas.toDataURL("image/png");
-    openPrintWindow(imageUrl, buildExportFilename(name, "pdf"), "letter");
-  };
-
   const handleUpgrade = () => {
-    router.push("/pro");
+    router.push("/plus");
   };
 
   const faqItems = useMemo(
@@ -598,17 +563,18 @@ export default function MainPage() {
             onOpenSettings={() => {
               setIsModalOpen(true);
             }}
-            onDownloadPng={handleDownloadPng}
-            onDownloadJpg={handleDownloadJpg}
-            onDownloadPdf={hasAccess ? handleDownloadPdf : undefined}
-            onProClick={handleUpgrade}
+            isSignedIn={Boolean(userId)}
+            hasAccess={hasAccess}
+            themeId={themeId}
             strings={strings}
           />
 
-          <div className="rounded-[28px] bg-gradient-to-br from-[#b8eb7c]/45 via-[#f7cd63]/40 to-[#fc8fc6]/40 p-2 sm:p-3">
+          <div className="rounded-[28px] bg-white p-2 sm:p-3">
             <ProgressCard
               progressLabel={progressLabel}
               percentLabel={percentLabel}
+              onOpenExport={() => setIsExportModalOpen(true)}
+              strings={strings}
               isCompactView={isCompactView}
               isMonthView={isMonthView}
               gridContainerRef={gridContainerRef}
@@ -623,7 +589,6 @@ export default function MainPage() {
               rowStep={rowStep}
               name={name}
               viewTitle={viewTitle}
-              footerText={lifeExpectancyLine}
               axisPadding={isMonthView ? GRID_AXIS_OFFSET : 0}
               showAxis={isMonthView}
             />
@@ -631,48 +596,83 @@ export default function MainPage() {
         </div>
       </section>
 
+      <ExportModal
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
+        hasAccess={hasAccess}
+        name={name}
+        total={viewState.totalUnits}
+        filled={viewState.unitsPassed}
+        perRow={viewState.perRow}
+        dotStyle={dotStyle}
+        theme={activeTheme}
+        dotSize={gridMetrics.dotSize}
+        gap={gridMetrics.gap}
+        title={viewTitle}
+        weeksText={progressLabel}
+        percentText={percentLabel}
+      />
+
       <section className="w-full bg-white py-12 sm:py-16">
         <div className="mx-auto w-full max-w-[760px] px-6 sm:px-8">
           <article className="space-y-14">
+            <section>
+              <h2 className="text-2xl font-semibold text-main sm:text-3xl">
+                {landingCopy.introTitle}
+              </h2>
+              <p className="mt-4 text-base leading-8 text-muted">
+                {landingCopy.introBody}
+              </p>
+            </section>
+
             <section>
               <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-subtle">{landingCopy.aboutLabel}</p>
               <h2 className="mt-3 text-2xl font-semibold text-main sm:text-3xl">
                 {landingCopy.aboutTitle}
               </h2>
               <p className="mt-4 text-base leading-8 text-muted">
-                <strong className="text-main">DotSpan</strong> {landingCopy.aboutBody}
+                {landingCopy.aboutBody}
               </p>
               <p className="mt-3 text-base leading-8 text-muted">
-                Built on the mindset of <strong className="text-main">Your Life in Week</strong>, the
-                interface stays minimal so the message is easy to read and remember.
+                DotSpan is inspired by Tim Urban&rsquo;s <strong className="text-main">Your Life in Weeks</strong>,
+                with a minimal interface designed for focus, reflection, and better planning.
               </p>
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-main sm:text-3xl">{landingCopy.basicTitle}</h2>
+              <h2 className="text-2xl font-semibold text-main sm:text-3xl">
+                Life moves one week at a time
+              </h2>
+              <p className="mt-4 text-base leading-8 text-muted">
+                Most people plan in years but live in days. The dot view bridges that gap. You can
+                see long-term direction while still making small weekly choices.
+              </p>
+              <p className="mt-3 text-base leading-8 text-muted">
+                Instead of vague pressure, you get a concrete timeline: where you are now, what is
+                still ahead, and what deserves attention this week.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold text-main sm:text-3xl">
+                A simple weekly reset
+              </h2>
               <ul className="mt-4 space-y-2 text-base leading-8 text-muted">
-                {landingCopy.basicItems.map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
+                <li>Look at your timeline for 60 seconds before planning your week.</li>
+                <li>Choose one meaningful action for health, work, and relationships.</li>
+                <li>Close the week with a short reflection on what actually mattered.</li>
               </ul>
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-main sm:text-3xl">{landingCopy.premiumTitle}</h2>
+              <h2 className="text-2xl font-semibold text-main sm:text-3xl">
+                Weekly reflection prompts
+              </h2>
               <ul className="mt-4 space-y-2 text-base leading-8 text-muted">
-                {landingCopy.premiumItems.map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
+                <li>What am I postponing that would improve my life if done this week?</li>
+                <li>Where am I spending time by default instead of by intention?</li>
+                <li>What is one small change that future me will thank me for?</li>
               </ul>
-              {!hasAccess ? (
-                <button
-                  type="button"
-                  onClick={handleUpgrade}
-                  className="mt-5 inline-flex items-center rounded-full bg-[#4e55e0] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#4048d3]"
-                >
-                  See Pro
-                </button>
-              ) : null}
             </section>
 
             <section>
@@ -698,7 +698,7 @@ export default function MainPage() {
                   href="https://waitbutwhy.com/2014/05/life-weeks.html"
                   target="_blank"
                   rel="noreferrer"
-                  className="text-[#4e55e0] underline underline-offset-4"
+                  className="text-[#00c565] underline underline-offset-4"
                 >
                   Your Life in Weeks
                 </a>
@@ -706,7 +706,7 @@ export default function MainPage() {
                   href="https://waitbutwhy.com/2013/08/putting-time-in-perspective.html"
                   target="_blank"
                   rel="noreferrer"
-                  className="text-[#4e55e0] underline underline-offset-4"
+                  className="text-[#00c565] underline underline-offset-4"
                 >
                   Putting Time in Perspective
                 </a>
@@ -728,12 +728,11 @@ export default function MainPage() {
         mounted={mounted}
         isSignedIn={Boolean(userId)}
         authEmail={authEmail}
-        hasAccess={hasAccess}
         isAuthLoading={isAuthLoading}
         onSignIn={handleSignIn}
         onSignOut={handleSignOut}
-        onUpgrade={handleUpgrade}
         onSave={handleSave}
+        onReset={handleResetDraft}
         draftName={draftName}
         onDraftNameChange={(value) => updateDraft({name: value})}
         draftCountry={draftCountry}

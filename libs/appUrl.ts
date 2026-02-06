@@ -2,12 +2,10 @@ import config from "../config";
 
 export function getAppUrl(): string {
   if (typeof window !== "undefined") {
-    const origin = window.location.origin;
-    const configured = config.appUrl?.trim();
-    if (configured && !configured.includes("localhost")) {
-      return configured;
+    const runtimeOrigin = window.location.origin?.trim();
+    if (runtimeOrigin && runtimeOrigin !== "null") {
+      return runtimeOrigin;
     }
-    return origin || configured || "http://localhost:3000";
   }
 
   return config.appUrl?.trim() || "http://localhost:3000";

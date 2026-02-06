@@ -77,7 +77,7 @@ export default function DashboardPage() {
               Hi {displayName}
             </h1>
             <p className="mt-3 text-sm text-muted">
-              Keep your timeline updated and your Pro access in sync.
+              Keep your timeline updated and your Plus access in sync.
             </p>
 
             <div className="mt-6 grid gap-3 sm:grid-cols-2">
@@ -95,14 +95,14 @@ export default function DashboardPage() {
               </Link>
               {!hasAccess ? (
                 <Link
-                  href="/pro"
+                  href="/plus"
                   className="rounded-2xl bg-neutral-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-neutral-800"
                 >
-                  Upgrade to Pro
+                  Upgrade to Plus
                 </Link>
               ) : (
                 <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-900">
-                  Pro active
+                  Plus active
                 </div>
               )}
             </div>

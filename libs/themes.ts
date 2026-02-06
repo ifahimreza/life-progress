@@ -60,8 +60,8 @@ export const THEMES: Theme[] = [
       text: "#111827",
       muted: "#6b7280",
       subtle: "#9ca3af",
-      brand: "#3a8f7a",
-      brandSoft: "rgba(58, 143, 122, 0.22)",
+      brand: "#00c565",
+      brandSoft: "rgba(0, 197, 101, 0.22)",
       gradientFrom: "#3a8f7a",
       gradientMid: "#f08a7a",
       gradientTo: "#2fb8c8",
@@ -81,8 +81,8 @@ export const THEMES: Theme[] = [
       text: "#0f1f1b",
       muted: "#5a6e69",
       subtle: "#93a7a1",
-      brand: "#2b8a6f",
-      brandSoft: "rgba(43, 138, 111, 0.22)",
+      brand: "#00c565",
+      brandSoft: "rgba(0, 197, 101, 0.22)",
       gradientFrom: "#2b8a6f",
       gradientMid: "#42b7a0",
       gradientTo: "#5bd1c8",
@@ -102,8 +102,8 @@ export const THEMES: Theme[] = [
       text: "#2b1710",
       muted: "#7a5547",
       subtle: "#b08b7f",
-      brand: "#d95c4a",
-      brandSoft: "rgba(217, 92, 74, 0.22)",
+      brand: "#00c565",
+      brandSoft: "rgba(0, 197, 101, 0.22)",
       gradientFrom: "#d95c4a",
       gradientMid: "#f08a5b",
       gradientTo: "#f3b77b",
@@ -123,8 +123,8 @@ export const THEMES: Theme[] = [
       text: "#0f1b2a",
       muted: "#51657a",
       subtle: "#8aa0b3",
-      brand: "#2b6cb0",
-      brandSoft: "rgba(43, 108, 176, 0.22)",
+      brand: "#00c565",
+      brandSoft: "rgba(0, 197, 101, 0.22)",
       gradientFrom: "#2b6cb0",
       gradientMid: "#3aaed8",
       gradientTo: "#5ad1f1",
@@ -144,8 +144,8 @@ export const THEMES: Theme[] = [
       text: "#1f2a10",
       muted: "#65704f",
       subtle: "#98a281",
-      brand: "#6aa84f",
-      brandSoft: "rgba(106, 168, 79, 0.22)",
+      brand: "#00c565",
+      brandSoft: "rgba(0, 197, 101, 0.22)",
       gradientFrom: "#6aa84f",
       gradientMid: "#b6c43b",
       gradientTo: "#f2c84b",
@@ -165,8 +165,8 @@ export const THEMES: Theme[] = [
       text: "#2b1119",
       muted: "#7a4a58",
       subtle: "#b08b96",
-      brand: "#c94b6b",
-      brandSoft: "rgba(201, 75, 107, 0.22)",
+      brand: "#00c565",
+      brandSoft: "rgba(0, 197, 101, 0.22)",
       gradientFrom: "#c94b6b",
       gradientMid: "#e67b8f",
       gradientTo: "#f2a3b7",
@@ -186,8 +186,8 @@ export const THEMES: Theme[] = [
       text: "#1c2330",
       muted: "#5b6778",
       subtle: "#97a3b3",
-      brand: "#4f5d75",
-      brandSoft: "rgba(79, 93, 117, 0.22)",
+      brand: "#00c565",
+      brandSoft: "rgba(0, 197, 101, 0.22)",
       gradientFrom: "#4f5d75",
       gradientMid: "#7d8ba4",
       gradientTo: "#a9b6c8",
@@ -207,8 +207,8 @@ export const THEMES: Theme[] = [
       text: "#3a2614",
       muted: "#7a5c40",
       subtle: "#b29374",
-      brand: "#c27c3b",
-      brandSoft: "rgba(194, 124, 59, 0.22)",
+      brand: "#00c565",
+      brandSoft: "rgba(0, 197, 101, 0.22)",
       gradientFrom: "#c27c3b",
       gradientMid: "#e09a57",
       gradientTo: "#f2c07a",
@@ -221,9 +221,14 @@ export const THEMES: Theme[] = [
 ];
 
 export const DEFAULT_THEME_ID: ThemeId = "classic";
+export const BASIC_THEME_IDS: ThemeId[] = ["classic", "aurora", "sunset"];
 
 export function getTheme(id: ThemeId) {
   return THEMES.find((theme) => theme.id === id) ?? THEMES[0];
+}
+
+export function getBasicThemes() {
+  return THEMES.filter((theme) => BASIC_THEME_IDS.includes(theme.id));
 }
 
 export function applyTheme(theme: Theme) {

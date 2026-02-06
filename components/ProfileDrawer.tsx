@@ -21,12 +21,11 @@ type ProfileDrawerProps = {
   mounted: boolean;
   isSignedIn: boolean;
   authEmail: string | null;
-  hasAccess: boolean;
   isAuthLoading: boolean;
   onSignIn: () => void;
   onSignOut: () => void;
-  onUpgrade?: () => void;
   onSave: () => void;
+  onReset: () => void;
   draftName: string;
   onDraftNameChange: (value: string) => void;
   draftCountry: string;
@@ -55,12 +54,11 @@ export default function ProfileDrawer({
   mounted,
   isSignedIn,
   authEmail,
-  hasAccess,
   isAuthLoading,
   onSignIn,
   onSignOut,
-  onUpgrade,
   onSave,
+  onReset,
   draftName,
   onDraftNameChange,
   draftCountry,
@@ -372,21 +370,12 @@ export default function ProfileDrawer({
               />
             </div>
             <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <label className="text-[11px] font-semibold uppercase tracking-wide text-muted">
-                  {strings.themeLabel}
-                </label>
-                {!hasAccess ? (
-                  <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted">
-                    {strings.proInactive}
-                  </span>
-                ) : null}
-              </div>
+              <label className="text-[11px] font-semibold uppercase tracking-wide text-muted">
+                {strings.themeLabel}
+              </label>
               <Select
                 options={themeOptions}
-                value={themeOptions.filter((option) =>
-                  option.id === (hasAccess ? draftThemeId : DEFAULT_THEME_ID)
-                )}
+                value={themeOptions.filter((option) => option.id === draftThemeId)}
                 placeholder={strings.themeLabel}
                 clearable={false}
                 size="compact"
@@ -413,21 +402,6 @@ export default function ProfileDrawer({
                   IconsContainer: {style: {paddingRight: "8px"}}
                 }}
               />
-              {!hasAccess ? (
-                <div className="text-xs text-muted">
-                  <p className="font-semibold text-main">{strings.themeLockedTitle}</p>
-                  <p className="mt-1">{strings.themeLockedCta}</p>
-                  {onUpgrade ? (
-                    <button
-                      type="button"
-                      onClick={onUpgrade}
-                      className="mt-2 text-xs font-semibold text-neutral-700 underline underline-offset-4 transition hover:text-neutral-900"
-                    >
-                      {strings.upgradeToPro}
-                    </button>
-                  ) : null}
-                </div>
-              ) : null}
             </div>
             <div className="space-y-1.5">
               <label className="text-[11px] font-semibold uppercase tracking-wide text-muted">
@@ -501,7 +475,14 @@ export default function ProfileDrawer({
               />
             </div>
           </div>
-          <div className="flex justify-end pt-1">
+          <div className="flex flex-wrap justify-end gap-2 pt-1">
+            <button
+              type="button"
+              onClick={onReset}
+              className="inline-flex w-full items-center justify-center rounded-full border border-surface bg-white px-4 py-2.5 text-sm font-semibold text-main transition hover:bg-neutral-100 sm:w-auto sm:py-2"
+            >
+              Reset
+            </button>
             <button
               type="button"
               onClick={onSave}

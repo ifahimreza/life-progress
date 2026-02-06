@@ -15,7 +15,12 @@ const serverConfig = {
 		senderEmail: process.env.POSTMARK_SENDER_EMAIL ?? '',
 	},
 
+	turnstile: {
+		secretKey: process.env.TURNSTILE_SECRET_KEY ?? '',
+	},
+
 	freemius: {
+		...config.freemius,
 		productId: process.env.FREEMIUS_PRODUCT_ID ?? '',
 		apiKey: process.env.FREEMIUS_API_KEY ?? '',
 		secretKey: process.env.FREEMIUS_SECRET_KEY ?? '',
@@ -23,19 +28,13 @@ const serverConfig = {
 		isSandbox: process.env.FREEMIUS_SANDBOX === 'true',
 		plans: {
 			yearly: {
+				...(config.freemius?.plans?.yearly ?? {}),
 				id: 'yearly',
-				name: 'Pro Yearly',
-				price: 18,
-				currency: 'USD',
-				interval: 'year',
 				planId: process.env.FREEMIUS_PLAN_ID_YEARLY ?? '',
 			},
 			lifetime: {
+				...(config.freemius?.plans?.lifetime ?? {}),
 				id: 'lifetime',
-				name: 'Pro Lifetime',
-				price: 48,
-				currency: 'USD',
-				interval: 'lifetime',
 				planId: process.env.FREEMIUS_PLAN_ID_LIFETIME ?? '',
 			},
 		},

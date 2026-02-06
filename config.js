@@ -19,10 +19,10 @@ const config = {
 
 	// Short tagline for metadata and social previews.
 	appDescription:
-		'See time clearly with a minimalist life dots timeline',
+		'DotSpan helps you visualize Your Life in Weeks with a clean dot timeline for perspective, focus, and accountability.',
 
 	// Primary brand color used in UI accents and PWA theme color.
-	brandColor: '#4e55e0',
+	brandColor: '#00c565',
 
 	// Public app URL used for canonical links and auth callbacks.
 	appUrl,
@@ -43,6 +43,26 @@ const config = {
 	auth: {
 		google: {
 			enabled: true,
+		},
+	},
+
+	// Public pricing metadata used by UI.
+	freemius: {
+		plans: {
+			yearly: {
+				id: 'yearly',
+				name: 'Plus Yearly',
+				price: Number(process.env.NEXT_PUBLIC_FREEMIUS_PRICE_YEARLY ?? 18),
+				currency: 'USD',
+				interval: 'year',
+			},
+			lifetime: {
+				id: 'lifetime',
+				name: 'Plus Lifetime',
+				price: Number(process.env.NEXT_PUBLIC_FREEMIUS_PRICE_LIFETIME ?? 48),
+				currency: 'USD',
+				interval: 'lifetime',
+			},
 		},
 	},
 };

@@ -7,6 +7,36 @@ const LEGACY_SOUND_KEY = "life-dots-menu-sound";
 export type MenuSoundMode = "off" | "soft" | "bright";
 let soundMode: MenuSoundMode = "soft";
 
+function playTone(ctx: AudioContext, mode: MenuSoundMode) {
+  const now = ctx.currentTime;
+  if (now - lastPlayTime < 0.06) return;
+  lastPlayTime = now;
+
+  const gain = ctx.createGain();
+  const gainPeak = mode === "soft" ? 0.05 : 0.085;
+  gain.gain.setValueAtTime(0.0001, now);
+  gain.gain.exponentialRampToValueAtTime(gainPeak, now + 0.01);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+
+  const osc = ctx.createOscillator();
+  osc.type = "triangle";
+  const baseFreq = mode === "soft" ? 620 : 760;
+  const peakFreq = mode === "soft" ? 860 : 1120;
+  osc.frequency.setValueAtTime(baseFreq, now);
+  osc.frequency.exponentialRampToValueAtTime(peakFreq, now + 0.08);
+
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+
+  osc.start(now);
+  osc.stop(now + 0.12);
+
+  osc.onended = () => {
+    osc.disconnect();
+    gain.disconnect();
+  };
+}
+
 function loadSoundMode() {
   if (typeof window === "undefined") return soundMode;
   const stored =
@@ -45,38 +75,34 @@ export function unlockAudio() {
   isUnlocked = true;
 }
 
+export function playMenuSoundFromGesture() {
+  if (typeof window === "undefined") return;
+  const mode = loadSoundMode();
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  isUnlocked = true;
+  if (mode === "off") return;
+
+  const attemptPlay = () => {
+    if (ctx.state !== "running") return;
+    playTone(ctx, mode);
+  };
+
+  if (ctx.state === "suspended") {
+    void ctx.resume().then(attemptPlay).catch(() => {});
+    return;
+  }
+
+  attemptPlay();
+}
+
 export function playHoverSound() {
   if (typeof window === "undefined") return;
   const mode = loadSoundMode();
   if (mode === "off") return;
   const ctx = getAudioContext();
   if (!ctx || !isUnlocked) return;
-
-  const now = ctx.currentTime;
-  if (now - lastPlayTime < 0.06) return;
-  lastPlayTime = now;
-
-  const gain = ctx.createGain();
-  const gainPeak = mode === "soft" ? 0.05 : 0.085;
-  gain.gain.setValueAtTime(0.0001, now);
-  gain.gain.exponentialRampToValueAtTime(gainPeak, now + 0.01);
-  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
-
-  const osc = ctx.createOscillator();
-  osc.type = "triangle";
-  const baseFreq = mode === "soft" ? 620 : 760;
-  const peakFreq = mode === "soft" ? 860 : 1120;
-  osc.frequency.setValueAtTime(baseFreq, now);
-  osc.frequency.exponentialRampToValueAtTime(peakFreq, now + 0.08);
-
-  osc.connect(gain);
-  gain.connect(ctx.destination);
-
-  osc.start(now);
-  osc.stop(now + 0.12);
-
-  osc.onended = () => {
-    osc.disconnect();
-    gain.disconnect();
-  };
+  if (ctx.state !== "running") return;
+  playTone(ctx, mode);
 }

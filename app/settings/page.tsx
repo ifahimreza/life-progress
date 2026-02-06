@@ -243,7 +243,7 @@ export default function SettingsPage() {
                 Your profile and access.
               </h1>
               <p className="mt-3 text-sm text-muted">
-                Manage your login and view your Pro access status.
+                Manage your login and view your Plus access status.
               </p>
             </div>
 
@@ -261,7 +261,7 @@ export default function SettingsPage() {
                     <p className="mt-1 text-sm font-semibold text-main">{email ?? "—"}</p>
                   </div>
                   <div className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4 text-sm text-neutral-700">
-                    {hasAccess ? "Pro access is active." : "Free plan. Upgrade for Pro features."}
+                    {hasAccess ? "Plus access is active." : "Basic plan. Upgrade for Plus features."}
                   </div>
                   <div className="flex flex-wrap gap-2">
                     <button
@@ -272,10 +272,10 @@ export default function SettingsPage() {
                       Sign out
                     </button>
                     <Link
-                      href="/pro"
+                      href="/plus"
                       className="rounded-full bg-neutral-900 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white"
                     >
-                      Go Pro
+                      Go Plus
                     </Link>
                   </div>
                 </div>
@@ -334,7 +334,7 @@ export default function SettingsPage() {
                     {primarySubscription ? (
                       <div className="mt-3 grid gap-2">
                         <div className="text-lg font-semibold text-main">
-                          {primarySubscription.planTitle ?? "Pro"}
+                          {primarySubscription.planTitle ?? "Plus"}
                         </div>
                         <div className="text-sm text-muted">
                           {primarySubscription.billingCycle
