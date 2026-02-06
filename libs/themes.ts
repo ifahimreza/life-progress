@@ -245,6 +245,10 @@ export function applyTheme(theme: Theme) {
   root.style.setProperty("--axis-text", palette.axisText);
 }
 
-export function buildThemeOptions(themes: Theme[]) {
-  return themes.map((theme) => ({id: theme.id, label: theme.name}));
+export function buildThemeOptions(themes: Theme[], labelPrefix?: string) {
+  const prefix = labelPrefix?.trim();
+  return themes.map((theme) => ({
+    id: theme.id,
+    label: prefix ? `${prefix}: ${theme.name}` : theme.name
+  }));
 }

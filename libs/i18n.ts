@@ -47,6 +47,10 @@ export type UiStrings = {
   inspiredBySuffix: string;
   dotStyleClassic: string;
   dotStyleRainbow: string;
+  menuSoundLabel: string;
+  menuSoundOff: string;
+  menuSoundSoft: string;
+  menuSoundBright: string;
   languageDefault: string;
   languageEnglish: string;
   languageSpanish: string;
@@ -99,6 +103,10 @@ const TRANSLATIONS: Record<Exclude<LanguageId, "default">, UiStrings> = {
     inspiredBySuffix: "",
     dotStyleClassic: "Classic black",
     dotStyleRainbow: "Rainbow box",
+    menuSoundLabel: "Menu sound",
+    menuSoundOff: "Off",
+    menuSoundSoft: "Soft",
+    menuSoundBright: "Bright",
     languageDefault: "Default (auto)",
     languageEnglish: "English",
     languageSpanish: "Spanish",
@@ -149,6 +157,10 @@ const TRANSLATIONS: Record<Exclude<LanguageId, "default">, UiStrings> = {
     inspiredBySuffix: "",
     dotStyleClassic: "Clásico negro",
     dotStyleRainbow: "Caja arcoíris",
+    menuSoundLabel: "Sonido del menú",
+    menuSoundOff: "Apagado",
+    menuSoundSoft: "Suave",
+    menuSoundBright: "Brillante",
     languageDefault: "Predeterminado (auto)",
     languageEnglish: "Inglés",
     languageSpanish: "Español",
@@ -199,6 +211,10 @@ const TRANSLATIONS: Record<Exclude<LanguageId, "default">, UiStrings> = {
     inspiredBySuffix: "",
     dotStyleClassic: "Classique noir",
     dotStyleRainbow: "Boîte arc-en-ciel",
+    menuSoundLabel: "Son du menu",
+    menuSoundOff: "Désactivé",
+    menuSoundSoft: "Doux",
+    menuSoundBright: "Brillant",
     languageDefault: "Par défaut (auto)",
     languageEnglish: "Anglais",
     languageSpanish: "Espagnol",
@@ -249,6 +265,10 @@ const TRANSLATIONS: Record<Exclude<LanguageId, "default">, UiStrings> = {
     inspiredBySuffix: "に着想",
     dotStyleClassic: "クラシック（黒）",
     dotStyleRainbow: "レインボー",
+    menuSoundLabel: "メニュー音",
+    menuSoundOff: "オフ",
+    menuSoundSoft: "ソフト",
+    menuSoundBright: "ブライト",
     languageDefault: "既定（自動）",
     languageEnglish: "英語",
     languageSpanish: "スペイン語",
@@ -299,6 +319,10 @@ const TRANSLATIONS: Record<Exclude<LanguageId, "default">, UiStrings> = {
     inspiredBySuffix: "से प्रेरित",
     dotStyleClassic: "क्लासिक काला",
     dotStyleRainbow: "रेनबो बॉक्स",
+    menuSoundLabel: "मेनू साउंड",
+    menuSoundOff: "बंद",
+    menuSoundSoft: "सॉफ्ट",
+    menuSoundBright: "ब्राइट",
     languageDefault: "डिफ़ॉल्ट (ऑटो)",
     languageEnglish: "अंग्रेज़ी",
     languageSpanish: "स्पेनिश",
@@ -349,6 +373,10 @@ const TRANSLATIONS: Record<Exclude<LanguageId, "default">, UiStrings> = {
     inspiredBySuffix: "থেকে অনুপ্রাণিত",
     dotStyleClassic: "ক্লাসিক কালো",
     dotStyleRainbow: "রেইনবো বক্স",
+    menuSoundLabel: "মেনু সাউন্ড",
+    menuSoundOff: "বন্ধ",
+    menuSoundSoft: "সফট",
+    menuSoundBright: "উজ্জ্বল",
     languageDefault: "ডিফল্ট (অটো)",
     languageEnglish: "ইংরেজি",
     languageSpanish: "স্প্যানিশ",
@@ -426,9 +454,12 @@ export function buildLanguageOptions(strings: UiStrings): SelectOption[] {
 }
 
 export function buildDotStyleOptions(strings: UiStrings): SelectOption[] {
+  const prefix = strings.dotStyleLabel;
   return DOT_STYLE_IDS.map((id) => ({
     id,
-    label: id === "classic" ? strings.dotStyleClassic : strings.dotStyleRainbow
+    label: `${prefix}: ${
+      id === "classic" ? strings.dotStyleClassic : strings.dotStyleRainbow
+    }`
   }));
 }
 

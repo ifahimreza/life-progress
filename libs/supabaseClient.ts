@@ -10,8 +10,8 @@ export function getSupabaseClient() {
     return null;
   }
 
-  const supabaseUrl = config.supabase?.url;
-  const supabaseAnonKey = config.supabase?.anonKey;
+  const supabaseUrl = config.supabase?.url?.trim();
+  const supabaseAnonKey = config.supabase?.anonKey?.trim();
 
   if (!supabaseUrl || !supabaseAnonKey) {
     if (process.env.NODE_ENV !== "production") {
@@ -20,6 +20,13 @@ export function getSupabaseClient() {
     return null;
   }
 
-  supabase = createClient(supabaseUrl, supabaseAnonKey);
+  supabase = createClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+      flowType: "pkce"
+    }
+  });
   return supabase;
 }

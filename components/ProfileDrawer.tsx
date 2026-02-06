@@ -3,6 +3,7 @@ import {Select} from "baseui/select";
 import {DatePicker} from "baseui/datepicker";
 import {Drawer} from "baseui/drawer";
 import type {FormEvent} from "react";
+import {useEffect, useMemo, useState} from "react";
 import {
   CountryOption,
   DotStyle,
@@ -13,6 +14,7 @@ import {
 import {DEFAULT_THEME_ID} from "../libs/themes";
 import type {ThemeId} from "../libs/themes";
 import type {UiStrings} from "../libs/i18n";
+import {getMenuSoundMode, setMenuSoundMode, type MenuSoundMode} from "../libs/hoverSound";
 
 type ProfileDrawerProps = {
   isOpen: boolean;
@@ -101,6 +103,20 @@ export default function ProfileDrawer({
     }
   }
 
+  const [menuSound, setMenuSound] = useState<MenuSoundMode>("soft");
+  useEffect(() => {
+    setMenuSound(getMenuSoundMode());
+  }, []);
+
+  const menuSoundOptions = useMemo(
+    () => [
+      {id: "off", label: strings.menuSoundOff},
+      {id: "soft", label: strings.menuSoundSoft},
+      {id: "bright", label: strings.menuSoundBright}
+    ],
+    [strings.menuSoundBright, strings.menuSoundOff, strings.menuSoundSoft]
+  );
+
   return (
     <Drawer
       isOpen={isOpen}
@@ -141,57 +157,6 @@ export default function ProfileDrawer({
           }}
           className="space-y-4"
         >
-          <div className="rounded-2xl border border-surface bg-white p-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-[11px] font-semibold uppercase tracking-[0.2em] text-subtle">
-                {strings.accountLabel}
-              </h3>
-              {hasAccess ? (
-                <span className="rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-700">
-                  {strings.proActive}
-                </span>
-              ) : (
-                <span className="rounded-full bg-neutral-100 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted">
-                  {strings.proInactive}
-                </span>
-              )}
-            </div>
-            <p className="mt-2 text-sm text-muted">
-              {isAuthLoading
-                ? strings.authLoading
-                : isSignedIn
-                ? authEmail ?? strings.accountSignedIn
-                : strings.accountPrompt}
-            </p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {isSignedIn ? (
-                <button
-                  type="button"
-                  onClick={onSignOut}
-                  className="inline-flex items-center justify-center rounded-full border border-surface px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-muted transition hover:border-neutral-300 hover:text-neutral-900"
-                >
-                  {strings.signOut}
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={onSignIn}
-                  className="inline-flex items-center justify-center rounded-full bg-neutral-900 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white transition hover:bg-neutral-800"
-                >
-                  {strings.signIn}
-                </button>
-              )}
-              {!hasAccess && onUpgrade ? (
-                <button
-                  type="button"
-                  onClick={onUpgrade}
-                  className="inline-flex items-center justify-center rounded-full border border-neutral-900 bg-neutral-900 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white transition hover:bg-neutral-800"
-                >
-                  {strings.upgradeToPro}
-                </button>
-              ) : null}
-            </div>
-          </div>
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-semibold text-main">
               {strings.profileTitle}
@@ -216,6 +181,32 @@ export default function ProfileDrawer({
                 }
                 placeholder={strings.nameLabel}
                 clearable
+                size="compact"
+                overrides={{
+                  Root: {
+                    style: {
+                      backgroundColor: "transparent",
+                      borderColor: "rgba(15, 23, 42, 0.12)",
+                      borderTopLeftRadius: "14px",
+                      borderTopRightRadius: "14px",
+                      borderBottomLeftRadius: "14px",
+                      borderBottomRightRadius: "14px"
+                    }
+                  },
+                  Input: {
+                    style: {
+                      fontSize: "13px",
+                      paddingLeft: "12px",
+                      paddingRight: "12px",
+                      paddingTop: "10px",
+                      paddingBottom: "10px",
+                      color: "#0f172a"
+                    }
+                  },
+                  ClearIcon: {
+                    style: {color: "#94a3b8"}
+                  }
+                }}
               />
             </div>
             <div className="space-y-1.5">
@@ -228,9 +219,39 @@ export default function ProfileDrawer({
                 placeholder={strings.countryLabel}
                 searchable
                 clearable
+                size="compact"
                 onChange={(params) =>
                   onDraftCountryChange((params.value[0]?.id as string) ?? "")
                 }
+                overrides={{
+                  ControlContainer: {
+                    style: {
+                      minHeight: "40px",
+                      borderTopLeftRadius: "14px",
+                      borderTopRightRadius: "14px",
+                      borderBottomLeftRadius: "14px",
+                      borderBottomRightRadius: "14px",
+                      backgroundColor: "transparent",
+                      borderColor: "rgba(15, 23, 42, 0.12)",
+                      boxShadow: "none"
+                    }
+                  },
+                  Input: {
+                    style: {fontSize: "13px"}
+                  },
+                  Placeholder: {
+                    style: {fontSize: "13px", color: "#94a3b8"}
+                  },
+                  SingleValue: {
+                    style: {fontSize: "13px"}
+                  },
+                  ValueContainer: {
+                    style: {paddingLeft: "12px", paddingRight: "12px"}
+                  },
+                  IconsContainer: {
+                    style: {paddingRight: "8px"}
+                  }
+                }}
               />
             </div>
             <div className="space-y-1.5">
@@ -247,7 +268,23 @@ export default function ProfileDrawer({
                   placeholder={strings.dobLabel}
                   minDate={new Date(1901, 0, 1)}
                   maxDate={new Date()}
+                  size="compact"
                   overrides={{
+                    Input: {
+                      style: {
+                        borderTopLeftRadius: "14px",
+                        borderTopRightRadius: "14px",
+                        borderBottomLeftRadius: "14px",
+                        borderBottomRightRadius: "14px",
+                        backgroundColor: "transparent",
+                        borderColor: "rgba(15, 23, 42, 0.12)",
+                        minHeight: "40px",
+                        fontSize: "13px",
+                        color: "#0f172a",
+                        paddingLeft: "12px",
+                        paddingRight: "12px"
+                      }
+                    },
                     Popover: {
                       props: {
                         overrides: {
@@ -262,7 +299,33 @@ export default function ProfileDrawer({
                   }}
                 />
               ) : (
-                <Input value={draftDob ? draftDob.toISOString().split("T")[0] : ""} disabled />
+                <Input
+                  value={draftDob ? draftDob.toISOString().split("T")[0] : ""}
+                  disabled
+                  size="compact"
+                  overrides={{
+                    Root: {
+                      style: {
+                        backgroundColor: "transparent",
+                        borderColor: "rgba(15, 23, 42, 0.12)",
+                        borderTopLeftRadius: "14px",
+                        borderTopRightRadius: "14px",
+                        borderBottomLeftRadius: "14px",
+                        borderBottomRightRadius: "14px"
+                      }
+                    },
+                    Input: {
+                      style: {
+                        fontSize: "13px",
+                        paddingLeft: "12px",
+                        paddingRight: "12px",
+                        paddingTop: "10px",
+                        paddingBottom: "10px",
+                        color: "#0f172a"
+                      }
+                    }
+                  }}
+                />
               )}
             </div>
             <div className="space-y-1.5">
@@ -291,40 +354,88 @@ export default function ProfileDrawer({
                 value={dotStyleOptions.filter((option) => option.id === draftDotStyle)}
                 placeholder={strings.dotStyleLabel}
                 clearable={false}
+                size="compact"
                 onChange={(params) =>
                   onDraftDotStyleChange((params.value[0]?.id as DotStyle) ?? "classic")
                 }
+                overrides={{
+                  ControlContainer: {
+                    style: {
+                      minHeight: "40px",
+                      borderTopLeftRadius: "14px",
+                      borderTopRightRadius: "14px",
+                      borderBottomLeftRadius: "14px",
+                      borderBottomRightRadius: "14px",
+                      backgroundColor: "transparent",
+                      borderColor: "rgba(15, 23, 42, 0.12)",
+                      boxShadow: "none"
+                    }
+                  },
+                  Input: {style: {fontSize: "13px"}},
+                  Placeholder: {style: {fontSize: "13px", color: "#94a3b8"}},
+                  SingleValue: {style: {fontSize: "13px"}},
+                  ValueContainer: {style: {paddingLeft: "12px", paddingRight: "12px"}},
+                  IconsContainer: {style: {paddingRight: "8px"}}
+                }}
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-[11px] font-semibold uppercase tracking-wide text-muted">
-                {strings.themeLabel}
-              </label>
-              {hasAccess ? (
-                <Select
-                  options={themeOptions}
-                  value={themeOptions.filter((option) => option.id === draftThemeId)}
-                  placeholder={strings.themeLabel}
-                  clearable={false}
-                  onChange={(params) =>
-                    onDraftThemeChange((params.value[0]?.id as ThemeId) ?? DEFAULT_THEME_ID)
-                  }
-                />
-              ) : (
-                <div className="rounded-2xl border border-surface bg-white p-3 text-xs text-muted">
+              <div className="flex items-center justify-between">
+                <label className="text-[11px] font-semibold uppercase tracking-wide text-muted">
+                  {strings.themeLabel}
+                </label>
+                {!hasAccess ? (
+                  <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted">
+                    {strings.proInactive}
+                  </span>
+                ) : null}
+              </div>
+              <Select
+                options={themeOptions}
+                value={themeOptions.filter((option) =>
+                  option.id === (hasAccess ? draftThemeId : DEFAULT_THEME_ID)
+                )}
+                placeholder={strings.themeLabel}
+                clearable={false}
+                size="compact"
+                onChange={(params) =>
+                  onDraftThemeChange((params.value[0]?.id as ThemeId) ?? DEFAULT_THEME_ID)
+                }
+                overrides={{
+                  ControlContainer: {
+                    style: {
+                      minHeight: "40px",
+                      borderTopLeftRadius: "14px",
+                      borderTopRightRadius: "14px",
+                      borderBottomLeftRadius: "14px",
+                      borderBottomRightRadius: "14px",
+                      backgroundColor: "transparent",
+                      borderColor: "rgba(15, 23, 42, 0.12)",
+                      boxShadow: "none"
+                    }
+                  },
+                  Input: {style: {fontSize: "13px"}},
+                  Placeholder: {style: {fontSize: "13px", color: "#94a3b8"}},
+                  SingleValue: {style: {fontSize: "13px"}},
+                  ValueContainer: {style: {paddingLeft: "12px", paddingRight: "12px"}},
+                  IconsContainer: {style: {paddingRight: "8px"}}
+                }}
+              />
+              {!hasAccess ? (
+                <div className="text-xs text-muted">
                   <p className="font-semibold text-main">{strings.themeLockedTitle}</p>
                   <p className="mt-1">{strings.themeLockedCta}</p>
                   {onUpgrade ? (
                     <button
                       type="button"
                       onClick={onUpgrade}
-                      className="mt-3 inline-flex items-center justify-center rounded-full bg-neutral-900 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-white transition hover:bg-neutral-800"
+                      className="mt-2 text-xs font-semibold text-neutral-700 underline underline-offset-4 transition hover:text-neutral-900"
                     >
                       {strings.upgradeToPro}
                     </button>
                   ) : null}
                 </div>
-              )}
+              ) : null}
             </div>
             <div className="space-y-1.5">
               <label className="text-[11px] font-semibold uppercase tracking-wide text-muted">
@@ -335,9 +446,29 @@ export default function ProfileDrawer({
                 value={viewModeOptions.filter((option) => option.id === viewMode)}
                 placeholder={strings.viewModeLabel}
                 clearable={false}
+                size="compact"
                 onChange={(params) =>
                   onViewModeChange((params.value[0]?.id as ViewMode) ?? "weeks")
                 }
+                overrides={{
+                  ControlContainer: {
+                    style: {
+                      minHeight: "40px",
+                      borderTopLeftRadius: "14px",
+                      borderTopRightRadius: "14px",
+                      borderBottomLeftRadius: "14px",
+                      borderBottomRightRadius: "14px",
+                      backgroundColor: "transparent",
+                      borderColor: "rgba(15, 23, 42, 0.12)",
+                      boxShadow: "none"
+                    }
+                  },
+                  Input: {style: {fontSize: "13px"}},
+                  Placeholder: {style: {fontSize: "13px", color: "#94a3b8"}},
+                  SingleValue: {style: {fontSize: "13px"}},
+                  ValueContainer: {style: {paddingLeft: "12px", paddingRight: "12px"}},
+                  IconsContainer: {style: {paddingRight: "8px"}}
+                }}
               />
             </div>
             <div className="space-y-1.5">
@@ -349,9 +480,66 @@ export default function ProfileDrawer({
                 value={languageOptions.filter((option) => option.id === draftLanguage)}
                 placeholder={strings.languageLabel}
                 clearable={false}
+                size="compact"
                 onChange={(params) =>
                   onDraftLanguageChange((params.value[0]?.id as LanguageId) ?? "default")
                 }
+                overrides={{
+                  ControlContainer: {
+                    style: {
+                      minHeight: "40px",
+                      borderTopLeftRadius: "14px",
+                      borderTopRightRadius: "14px",
+                      borderBottomLeftRadius: "14px",
+                      borderBottomRightRadius: "14px",
+                      backgroundColor: "transparent",
+                      borderColor: "rgba(15, 23, 42, 0.12)",
+                      boxShadow: "none"
+                    }
+                  },
+                  Input: {style: {fontSize: "13px"}},
+                  Placeholder: {style: {fontSize: "13px", color: "#94a3b8"}},
+                  SingleValue: {style: {fontSize: "13px"}},
+                  ValueContainer: {style: {paddingLeft: "12px", paddingRight: "12px"}},
+                  IconsContainer: {style: {paddingRight: "8px"}}
+                }}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-semibold uppercase tracking-wide text-muted">
+                {strings.menuSoundLabel}
+              </label>
+              <Select
+                options={menuSoundOptions}
+                value={menuSoundOptions.filter((option) => option.id === menuSound)}
+                placeholder={strings.menuSoundLabel}
+                clearable={false}
+                size="compact"
+                onChange={(params) => {
+                  const next =
+                    (params.value[0]?.id as MenuSoundMode | undefined) ?? "soft";
+                  setMenuSound(next);
+                  setMenuSoundMode(next);
+                }}
+                overrides={{
+                  ControlContainer: {
+                    style: {
+                      minHeight: "40px",
+                      borderTopLeftRadius: "14px",
+                      borderTopRightRadius: "14px",
+                      borderBottomLeftRadius: "14px",
+                      borderBottomRightRadius: "14px",
+                      backgroundColor: "transparent",
+                      borderColor: "rgba(15, 23, 42, 0.12)",
+                      boxShadow: "none"
+                    }
+                  },
+                  Input: {style: {fontSize: "13px"}},
+                  Placeholder: {style: {fontSize: "13px", color: "#94a3b8"}},
+                  SingleValue: {style: {fontSize: "13px"}},
+                  ValueContainer: {style: {paddingLeft: "12px", paddingRight: "12px"}},
+                  IconsContainer: {style: {paddingRight: "8px"}}
+                }}
               />
             </div>
           </div>

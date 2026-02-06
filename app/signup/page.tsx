@@ -34,11 +34,24 @@ export default function SignupPage() {
 
   useEffect(() => {
     if (!supabase) return;
-    supabase.auth.getSession().then(({data}) => {
-      if (data.session?.user) {
-        router.replace("/dashboard");
+    let isActive = true;
+    const checkSession = async () => {
+      try {
+        const {data} = await supabase.auth.getSession();
+        if (!isActive) return;
+        if (data.session?.user) {
+          router.replace("/dashboard");
+        }
+      } catch (err) {
+        if (err instanceof DOMException && err.name === "AbortError") {
+          return;
+        }
       }
-    });
+    };
+    void checkSession();
+    return () => {
+      isActive = false;
+    };
   }, [router, supabase]);
 
   const redirectTo =

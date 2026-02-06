@@ -121,6 +121,7 @@ export function useSupabaseAuth({
       } catch (err) {
         if (!isActive) return;
         if (err instanceof DOMException && err.name === "AbortError") {
+          setIsLoading(false);
           return;
         }
         clearAuthState();
@@ -137,12 +138,15 @@ export function useSupabaseAuth({
           } else {
             clearAuthState();
           }
+          setIsLoading(false);
         } catch (err) {
           if (!isActive) return;
           if (err instanceof DOMException && err.name === "AbortError") {
+            setIsLoading(false);
             return;
           }
           clearAuthState();
+          setIsLoading(false);
         }
       }
     );

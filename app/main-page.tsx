@@ -110,8 +110,8 @@ export default function MainPage() {
     [hasAccess]
   );
   const themeOptions = useMemo(
-    () => buildThemeOptions(availableThemes),
-    [availableThemes]
+    () => buildThemeOptions(availableThemes, strings.themeLabel),
+    [availableThemes, strings.themeLabel]
   );
   const activeTheme = useMemo(() => getTheme(themeId), [themeId]);
 
