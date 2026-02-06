@@ -14,6 +14,8 @@ import {
 import {countryCodes, lifeExpectancyByCountry} from "../data/countries";
 import {
   UiStrings,
+  formatLifeExpectancy,
+  formatLocalePercent,
   buildDotStyleOptions,
   buildLanguageOptions,
   buildViewModeOptions,
@@ -276,12 +278,21 @@ export default function MainPage() {
   };
 
   const flagCode = countryOption?.countryCode;
-  const lifeExpectancyText = strings.lifeExpectancyLabel.replace(
-    "{years}",
-    String(expectancy)
+  const lifeExpectancyText = formatLifeExpectancy(
+    strings,
+    expectancy,
+    resolvedLocale
   );
   const lifeExpectancyLine = lifeExpectancyText;
   const flagUrl = flagCode ? getFlagSvgUrl(flagCode) : "";
+  const progressLabel = formatProgress(
+    strings,
+    viewMode,
+    viewState.unitsPassed,
+    viewState.totalUnits,
+    resolvedLocale
+  );
+  const percentLabel = formatLocalePercent(viewState.percent, resolvedLocale);
 
   const handleDownloadPng = async () => {
     const canvas = await renderCardToCanvas({
@@ -293,13 +304,8 @@ export default function MainPage() {
       dotSize: gridMetrics.dotSize,
       gap: gridMetrics.gap,
       title: viewTitle,
-      weeksText: formatProgress(
-        strings,
-        viewMode,
-        viewState.unitsPassed,
-        viewState.totalUnits
-      ),
-      percentText: `${viewState.percent}%`,
+      weeksText: progressLabel,
+      percentText: percentLabel,
       footerText: lifeExpectancyLine,
       footerFlagUrl: flagUrl,
       scale: 3
@@ -317,13 +323,8 @@ export default function MainPage() {
       dotSize: gridMetrics.dotSize,
       gap: gridMetrics.gap,
       title: viewTitle,
-      weeksText: formatProgress(
-        strings,
-        viewMode,
-        viewState.unitsPassed,
-        viewState.totalUnits
-      ),
-      percentText: `${viewState.percent}%`,
+      weeksText: progressLabel,
+      percentText: percentLabel,
       footerText: lifeExpectancyLine,
       footerFlagUrl: flagUrl,
       scale: 3
@@ -341,13 +342,8 @@ export default function MainPage() {
       dotSize: gridMetrics.dotSize,
       gap: gridMetrics.gap,
       title: viewTitle,
-      weeksText: formatProgress(
-        strings,
-        viewMode,
-        viewState.unitsPassed,
-        viewState.totalUnits
-      ),
-      percentText: `${viewState.percent}%`,
+      weeksText: progressLabel,
+      percentText: percentLabel,
       footerText: lifeExpectancyLine,
       footerFlagUrl: flagUrl,
       scale: 4
@@ -376,13 +372,8 @@ export default function MainPage() {
         />
 
         <ProgressCard
-          progressLabel={formatProgress(
-            strings,
-            viewMode,
-            viewState.unitsPassed,
-            viewState.totalUnits
-          )}
-          percent={viewState.percent}
+          progressLabel={progressLabel}
+          percentLabel={percentLabel}
           isCompactView={isCompactView}
           isMonthView={isMonthView}
           gridContainerRef={gridContainerRef}
@@ -435,6 +426,7 @@ export default function MainPage() {
         onDraftThemeChange={(value) => updateDraft({themeId: value})}
         viewMode={draftViewMode}
         onViewModeChange={(value) => updateDraft({viewMode: value})}
+        locale={resolvedLocale}
         countryOptions={countryOptions}
         dotStyleOptions={dotStyleOptions}
         themeOptions={themeOptions}

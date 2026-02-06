@@ -6,7 +6,7 @@ import DotsGrid from "./DotsGrid";
 type ProgressCardProps = {
   viewTitle?: string;
   progressLabel: string;
-  percent: number;
+  percentLabel: string;
   isCompactView: boolean;
   isMonthView: boolean;
   gridContainerRef: RefObject<HTMLDivElement>;
@@ -27,7 +27,7 @@ type ProgressCardProps = {
 
 export default function ProgressCard({
   progressLabel,
-  percent,
+  percentLabel,
   isCompactView,
   isMonthView,
   gridContainerRef,
@@ -58,7 +58,7 @@ export default function ProgressCard({
         )}
         <div className="flex items-center gap-x-3">
           <span>{progressLabel}</span>
-          <span>{percent}%</span>
+          <span>{percentLabel}</span>
         </div>
       </div>
       <div

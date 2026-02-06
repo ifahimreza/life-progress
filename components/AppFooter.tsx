@@ -28,20 +28,58 @@ export default function AppFooter({
   const [isSendingContact, setIsSendingContact] = useState(false);
   const [contactStatus, setContactStatus] = useState<string | null>(null);
   const [contactError, setContactError] = useState<string | null>(null);
+  const [defaultLanguageLabel, setDefaultLanguageLabel] = useState(strings.languageEnglish);
   const languageMenuRef = useRef<HTMLDivElement | null>(null);
+
   const isAdmin =
     session?.user?.app_metadata?.role === "admin" ||
     session?.user?.user_metadata?.role === "admin";
   const sessionEmail = session?.user?.email ?? "";
   const hasLanguageSelector = Boolean(languageOptions?.length && onLanguageChange);
+  const selectedLanguageLabelRaw =
+    languageOptions?.find((option) => option.id === languageValue)?.label;
   const selectedLanguageLabel =
-    languageOptions?.find((option) => option.id === languageValue)?.label ??
-    strings.languageEnglish;
+    languageValue === "default"
+      ? defaultLanguageLabel
+      : selectedLanguageLabelRaw ?? strings.languageEnglish;
 
   useEffect(() => {
     if (!sessionEmail) return;
     setContactEmail((current) => current || sessionEmail);
   }, [sessionEmail]);
+
+  useEffect(() => {
+    const locale =
+      typeof navigator !== "undefined" ? navigator.language.toLowerCase() : "en";
+    if (locale.startsWith("es")) {
+      setDefaultLanguageLabel(strings.languageSpanish);
+      return;
+    }
+    if (locale.startsWith("fr")) {
+      setDefaultLanguageLabel(strings.languageFrench);
+      return;
+    }
+    if (locale.startsWith("ja")) {
+      setDefaultLanguageLabel(strings.languageJapanese);
+      return;
+    }
+    if (locale.startsWith("hi")) {
+      setDefaultLanguageLabel(strings.languageHindi);
+      return;
+    }
+    if (locale.startsWith("bn")) {
+      setDefaultLanguageLabel(strings.languageBangla);
+      return;
+    }
+    setDefaultLanguageLabel(strings.languageEnglish);
+  }, [
+    strings.languageBangla,
+    strings.languageEnglish,
+    strings.languageFrench,
+    strings.languageHindi,
+    strings.languageJapanese,
+    strings.languageSpanish
+  ]);
 
   useEffect(() => {
     if (!isLanguageOpen) return;
@@ -99,120 +137,122 @@ export default function AppFooter({
   return (
     <>
       <footer className="mx-auto w-full max-w-[860px] px-4 pb-6 pt-3 sm:px-6">
-      <div className="flex flex-col items-center gap-3 border-t border-surface pt-4 text-[11px] text-muted sm:flex-row sm:justify-between">
-        <div className="font-semibold tracking-[0.2em] text-subtle">
-          DotSpan
-        </div>
-        <div className="flex flex-wrap items-center justify-center gap-3">
-          {hasLanguageSelector ? (
-            <div ref={languageMenuRef} className="relative">
-              <button
-                type="button"
-                onClick={() => setIsLanguageOpen((current) => !current)}
-                className="inline-flex items-center gap-2 rounded-full border border-neutral-300 bg-white px-3 py-1.5 text-[13px] font-medium text-main transition hover:border-neutral-400"
-                aria-haspopup="menu"
-                aria-expanded={isLanguageOpen}
-                aria-label={strings.languageLabel}
-              >
-                <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4 text-neutral-700">
-                  <path
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.75"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M12 21a9 9 0 1 0 0-18a9 9 0 0 0 0 18ZM3 12h18M12 3c2.2 2.5 3.4 5.7 3.4 9s-1.2 6.5-3.4 9M12 3c-2.2 2.5-3.4 5.7-3.4 9s1.2 6.5 3.4 9"
-                  />
-                </svg>
-                <span>{selectedLanguageLabel}</span>
-                <svg
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                  className={`h-4 w-4 text-neutral-500 transition ${isLanguageOpen ? "rotate-180" : ""}`}
-                >
-                  <path
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.75"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="m6 9 6 6 6-6"
-                  />
-                </svg>
-              </button>
-              {isLanguageOpen ? (
-                <div className="absolute bottom-full right-0 z-30 mb-2 w-48 rounded-xl border border-neutral-200 bg-white p-1.5">
-                  {languageOptions?.map((option) => (
-                    <button
-                      key={option.id}
-                      type="button"
-                      onClick={() => {
-                        onLanguageChange?.(option.id as LanguageId);
-                        setIsLanguageOpen(false);
-                      }}
-                      className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-[13px] transition hover:bg-neutral-50 ${
-                        option.id === languageValue ? "text-main" : "text-neutral-700"
-                      }`}
-                      role="menuitem"
+        <div className="border-t border-surface pt-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3">
+              <div className="text-sm font-semibold text-main">DotSpan</div>
+              {hasLanguageSelector ? (
+                <div ref={languageMenuRef} className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setIsLanguageOpen((current) => !current)}
+                    className="inline-flex items-center gap-2 rounded-md border border-neutral-200 bg-white px-2.5 py-1.5 text-xs font-medium text-main transition hover:border-neutral-400"
+                    aria-haspopup="menu"
+                    aria-expanded={isLanguageOpen}
+                    aria-label={strings.languageLabel}
+                  >
+                    <svg viewBox="0 0 24 24" aria-hidden="true" className="h-3.5 w-3.5 text-neutral-700">
+                      <path
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.75"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M12 21a9 9 0 1 0 0-18a9 9 0 0 0 0 18ZM3 12h18M12 3c2.2 2.5 3.4 5.7 3.4 9s-1.2 6.5-3.4 9M12 3c-2.2 2.5-3.4 5.7-3.4 9s1.2 6.5 3.4 9"
+                      />
+                    </svg>
+                    <span>{selectedLanguageLabel}</span>
+                    <svg
+                      viewBox="0 0 24 24"
+                      aria-hidden="true"
+                      className={`h-3.5 w-3.5 text-neutral-500 transition ${isLanguageOpen ? "rotate-180" : ""}`}
                     >
-                      <span>{option.label}</span>
-                      {option.id === languageValue ? <span className="text-xs">✓</span> : null}
-                    </button>
-                  ))}
+                      <path
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.75"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="m6 9 6 6 6-6"
+                      />
+                    </svg>
+                  </button>
+                  {isLanguageOpen ? (
+                    <div className="absolute bottom-full left-0 z-30 mb-2 w-44 rounded-xl border border-neutral-200 bg-white p-1.5">
+                      {languageOptions?.map((option) => (
+                        <button
+                          key={option.id}
+                          type="button"
+                          onClick={() => {
+                            onLanguageChange?.(option.id as LanguageId);
+                            setIsLanguageOpen(false);
+                          }}
+                          className={`flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-left text-xs transition hover:bg-neutral-50 ${
+                            option.id === languageValue ? "text-main" : "text-neutral-700"
+                          }`}
+                          role="menuitem"
+                        >
+                          <span>{option.label}</span>
+                          {option.id === languageValue ? <span className="text-xs">✓</span> : null}
+                        </button>
+                      ))}
+                    </div>
+                  ) : null}
                 </div>
               ) : null}
             </div>
-          ) : null}
-          <div className="flex flex-wrap items-center justify-center gap-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-subtle">
-          <Link href="/privacy" className="transition hover:text-neutral-600">
-            Privacy
-          </Link>
-          <Link href="/terms" className="transition hover:text-neutral-600">
-            Terms
-          </Link>
-          <Link href="/refund" className="transition hover:text-neutral-600">
-            Refund
-          </Link>
-          <button
-            type="button"
-            onClick={() => {
-              setIsContactOpen(true);
-              setContactError(null);
-              setContactStatus(null);
-            }}
-            className="transition hover:text-neutral-600"
-          >
-            Contact
-          </button>
-          {userId ? (
-            <Link href="/dashboard" className="transition hover:text-neutral-600">
-              Dashboard
-            </Link>
-          ) : (
-            <Link href="/login" className="transition hover:text-neutral-600">
-              Login
-            </Link>
-          )}
-          {isAdmin ? (
-            <Link href="/admin" className="transition hover:text-neutral-600">
-              Admin
-            </Link>
-          ) : null}
+
+            <div className="flex flex-wrap items-center gap-3 text-xs font-medium text-muted">
+              <Link href="/privacy" className="transition hover:text-neutral-700">
+                Privacy
+              </Link>
+              <Link href="/terms" className="transition hover:text-neutral-700">
+                Terms
+              </Link>
+              <Link href="/refund" className="transition hover:text-neutral-700">
+                Refund
+              </Link>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsContactOpen(true);
+                  setContactError(null);
+                  setContactStatus(null);
+                }}
+                className="transition hover:text-neutral-700"
+              >
+                Contact
+              </button>
+              {userId ? (
+                <Link href="/dashboard" className="transition hover:text-neutral-700">
+                  Dashboard
+                </Link>
+              ) : (
+                <Link href="/login" className="transition hover:text-neutral-700">
+                  Login
+                </Link>
+              )}
+              {isAdmin ? (
+                <Link href="/admin" className="transition hover:text-neutral-700">
+                  Admin
+                </Link>
+              ) : null}
+            </div>
+          </div>
+
+          <div className="mt-3 text-center text-[11px] text-subtle">
+            {strings.inspiredByPrefix ? `${strings.inspiredByPrefix} ` : ""}
+            <a
+              href="https://waitbutwhy.com/2014/05/life-weeks.html"
+              target="_blank"
+              rel="noreferrer"
+              className="transition hover:text-neutral-600"
+            >
+              {strings.inspiredByTitle}
+            </a>
+            {strings.inspiredBySuffix ? ` ${strings.inspiredBySuffix}` : ""}
           </div>
         </div>
-      </div>
-      <div className="mt-2 text-center text-[9px] font-semibold uppercase tracking-[0.18em] text-subtle sm:text-[10px]">
-        {strings.inspiredByPrefix ? `${strings.inspiredByPrefix} ` : ""}
-        <a
-          href="https://waitbutwhy.com/2014/05/life-weeks.html"
-          target="_blank"
-          rel="noreferrer"
-          className="transition hover:text-neutral-600"
-        >
-          {strings.inspiredByTitle}
-        </a>
-        {strings.inspiredBySuffix ? ` ${strings.inspiredBySuffix}` : ""}
-      </div>
       </footer>
 
       {isContactOpen ? (
@@ -280,3 +320,4 @@ export default function AppFooter({
     </>
   );
 }
+

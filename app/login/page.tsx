@@ -17,9 +17,17 @@ export default function LoginPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGoogleSubmitting, setIsGoogleSubmitting] = useState(false);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [nextPath, setNextPath] = useState<string | null>(null);
   const router = useRouter();
   const supabase = getSupabaseClient();
   const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim() ?? "";
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const next = new URLSearchParams(window.location.search).get("next") ?? "";
+    if (!next.startsWith("/") || next.startsWith("//")) return;
+    setNextPath(next);
+  }, []);
 
   useEffect(() => {
     if (!supabase) return;
@@ -29,7 +37,7 @@ export default function LoginPage() {
         const {data} = await supabase.auth.getSession();
         if (!isActive) return;
         if (data.session?.user) {
-          router.replace("/dashboard");
+          router.replace(nextPath ?? "/dashboard");
         }
       } catch (err) {
         if (err instanceof DOMException && err.name === "AbortError") {
@@ -41,9 +49,9 @@ export default function LoginPage() {
     return () => {
       isActive = false;
     };
-  }, [router, supabase]);
+  }, [nextPath, router, supabase]);
 
-  const redirectTo = getRedirectUrl("/onboarding");
+  const redirectTo = getRedirectUrl(nextPath ?? "/onboarding");
   const isCaptchaReady = Boolean(turnstileSiteKey && captchaToken);
 
   const handleCaptchaTokenChange = useCallback((token: string | null) => {

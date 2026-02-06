@@ -3,6 +3,7 @@ import type {Session} from "@supabase/supabase-js";
 import type {Profile} from "./lifeDotsData";
 import {getRedirectUrl} from "./appUrl";
 import {getSupabaseClient} from "./supabaseClient";
+import {AUTH_TOKEN_COOKIE} from "./authConstants";
 
 type UseSupabaseAuthOptions = {
   redirectPath: string;
@@ -23,6 +24,29 @@ type AuthState = {
   signOut: () => Promise<void>;
 };
 
+function setAuthTokenCookie(session: Session | null) {
+  if (typeof document === "undefined") return;
+
+  if (!session?.access_token) {
+    document.cookie = `${AUTH_TOKEN_COOKIE}=; Path=/; Max-Age=0; SameSite=Lax`;
+    return;
+  }
+
+  const now = Math.floor(Date.now() / 1000);
+  const maxAge = Math.max((session.expires_at ?? now + 3600) - now, 60);
+  const isSecure = typeof window !== "undefined" && window.location.protocol === "https:";
+
+  document.cookie = [
+    `${AUTH_TOKEN_COOKIE}=${encodeURIComponent(session.access_token)}`,
+    "Path=/",
+    `Max-Age=${maxAge}`,
+    "SameSite=Lax",
+    isSecure ? "Secure" : ""
+  ]
+    .filter(Boolean)
+    .join("; ");
+}
+
 export function useSupabaseAuth({
   redirectPath,
   fetchProfile = false
@@ -40,6 +64,7 @@ export function useSupabaseAuth({
     setHasAccess(false);
     setProfile(null);
     setProfileLoaded(false);
+    setAuthTokenCookie(null);
   }, []);
 
   const refreshProfile = useCallback(
@@ -123,6 +148,7 @@ export function useSupabaseAuth({
         }
 
         setSession(data.session);
+        setAuthTokenCookie(data.session ?? null);
         setIsLoading(false);
         if (data.session?.user?.id) {
           void refreshProfile(data.session.user.id);
@@ -146,6 +172,7 @@ export function useSupabaseAuth({
       async (_event, nextSession) => {
         try {
           setSession(nextSession);
+          setAuthTokenCookie(nextSession);
           setIsLoading(false);
           if (nextSession?.user?.id) {
             void refreshProfile(nextSession.user.id);

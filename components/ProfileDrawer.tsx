@@ -12,7 +12,7 @@ import {
 } from "../libs/lifeDotsData";
 import {DEFAULT_THEME_ID} from "../libs/themes";
 import type {ThemeId} from "../libs/themes";
-import type {UiStrings} from "../libs/i18n";
+import {formatLifeExpectancy, type UiStrings} from "../libs/i18n";
 import {getMenuSoundMode, setMenuSoundMode, type MenuSoundMode} from "../libs/hoverSound";
 
 type ProfileDrawerProps = {
@@ -41,6 +41,7 @@ type ProfileDrawerProps = {
   onDraftThemeChange: (value: ThemeId) => void;
   viewMode: ViewMode;
   onViewModeChange: (value: ViewMode) => void;
+  locale: string;
   countryOptions: CountryOption[];
   dotStyleOptions: SelectOption[];
   themeOptions: SelectOption[];
@@ -74,6 +75,7 @@ export default function ProfileDrawer({
   onDraftThemeChange,
   viewMode,
   onViewModeChange,
+  locale,
   countryOptions,
   dotStyleOptions,
   themeOptions,
@@ -323,10 +325,7 @@ export default function ProfileDrawer({
             </div>
             <div className="space-y-1.5">
               <label className="text-[11px] font-semibold uppercase tracking-wide text-muted">
-                {strings.lifeExpectancyLabel.replace(
-                  "{years}",
-                  String(draftLifeExpectancy)
-                )}
+                {formatLifeExpectancy(strings, draftLifeExpectancy, locale)}
               </label>
               <input
                 type="range"

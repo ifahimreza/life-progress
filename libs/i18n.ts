@@ -409,6 +409,17 @@ export function resolveLocale(language: LanguageId, navigatorLanguage?: string) 
   return language;
 }
 
+export function formatLocaleNumber(value: number, locale: string) {
+  return new Intl.NumberFormat(locale).format(value);
+}
+
+export function formatLocalePercent(value: number, locale: string) {
+  return new Intl.NumberFormat(locale, {
+    style: "percent",
+    maximumFractionDigits: 0
+  }).format(value / 100);
+}
+
 export function getTranslations(language: LanguageId, navigatorLanguage?: string) {
   const resolved = resolveLanguageId(language, navigatorLanguage);
   return TRANSLATIONS[resolved];
@@ -424,7 +435,8 @@ export function formatProgress(
   strings: UiStrings,
   mode: "weeks" | "months" | "years",
   current: number,
-  total: number
+  total: number,
+  locale: string
 ) {
   const template =
     mode === "months"
@@ -433,12 +445,15 @@ export function formatProgress(
       ? strings.yearsProgress
       : strings.weeksProgress;
   return template
-    .replace("{current}", String(current))
-    .replace("{total}", String(total));
+    .replace("{current}", formatLocaleNumber(current, locale))
+    .replace("{total}", formatLocaleNumber(total, locale));
 }
 
-export function formatLifeExpectancy(strings: UiStrings, years: number) {
-  return strings.lifeExpectancyLabel.replace("{years}", String(years));
+export function formatLifeExpectancy(strings: UiStrings, years: number, locale: string) {
+  return strings.lifeExpectancyLabel.replace(
+    "{years}",
+    formatLocaleNumber(years, locale)
+  );
 }
 
 export function buildLanguageOptions(strings: UiStrings): SelectOption[] {
