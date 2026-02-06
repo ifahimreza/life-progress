@@ -1,4 +1,4 @@
-import config from "../config";
+import config from "../config.server";
 
 /**
  * Send a transactional email using the Postmark API.
@@ -9,6 +9,7 @@ import config from "../config";
  * @param {string} [input.html] - HTML body.
  * @param {string} [input.text] - Plain text body.
  * @param {string} [input.from] - Optional sender override; defaults to config.postmark.senderEmail.
+ * @param {string} [input.replyTo] - Optional reply-to address.
  * @param {string} [input.messageStream] - Optional Postmark message stream (default: "outbound").
  */
 export async function sendEmail({
@@ -17,6 +18,7 @@ export async function sendEmail({
   html,
   text,
   from,
+  replyTo,
   messageStream = "outbound"
 }) {
   const apiKey = config.postmark.apiKey;
@@ -34,6 +36,7 @@ export async function sendEmail({
     Subject: subject,
     HtmlBody: html,
     TextBody: text,
+    ReplyTo: replyTo,
     MessageStream: messageStream
   };
 

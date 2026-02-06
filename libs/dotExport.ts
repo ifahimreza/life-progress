@@ -334,7 +334,7 @@ export function buildExportFilename(
   const safeName = name?.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
   const suffix = safeName || `export-${getRandomToken(6)}`;
   const stamp = buildLocalDateStamp();
-  return `life-dots-${suffix}-${stamp}.${extension}`;
+  return `dotspan-${suffix}-${stamp}.${extension}`;
 }
 
 export function writePrintDocument(
@@ -363,10 +363,10 @@ export function writePrintDocument(
     </head>
     <body>
       <div class="sheet">
-        <img id="life-dots" src="${imageUrl}" alt="${title}" />
+        <img id="dotspan" src="${imageUrl}" alt="${title}" />
       </div>
       <script>
-        const img = document.getElementById("life-dots");
+        const img = document.getElementById("dotspan");
         const triggerPrint = () => {
           setTimeout(() => {
             window.print();

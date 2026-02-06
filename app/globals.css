@@ -1,4 +1,4 @@
-@import url("https://api.fontshare.com/v2/css?f[]=satoshi@1,2,300,400,500,600,700,800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -10,23 +10,29 @@ html {
 
 body {
   min-height: 100vh;
+  font-size: 16px;
+  line-height: 1.5;
   background: var(--app-bg);
   color: var(--text-main);
 }
 
-* {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
+  border-color: var(--surface-border);
+  box-shadow: none !important;
 }
 
 :root {
-  --brand: #3a8f7a;
-  --brand-soft: rgba(58, 143, 122, 0.22);
-  --coral-bright: #f08a7a;
-  --cyan-bright: #2fb8c8;
-  --amber-bright: #f2b263;
-  --app-bg: #f5f5f5;
+  --brand: #4e55e0;
+  --brand-soft: rgba(78, 85, 224, 0.22);
+  --coral-bright: #fc8fc6;
+  --cyan-bright: #b8eb7c;
+  --amber-bright: #f7cd63;
+  --app-bg: #ffffff;
   --surface: #ffffff;
-  --surface-border: #e5e7eb;
+  --surface-border: rgba(55, 53, 47, 0.09);
   --text-main: #111827;
   --text-muted: #6b7280;
   --text-subtle: #9ca3af;
@@ -76,23 +82,17 @@ body {
   0% {
     fill: #111827;
   }
-  15% {
-    fill: #f97316;
+  25% {
+    fill: #4e55e0;
   }
-  30% {
-    fill: #facc15;
-  }
-  45% {
-    fill: #22c55e;
-  }
-  60% {
-    fill: #06b6d4;
+  50% {
+    fill: #b8eb7c;
   }
   75% {
-    fill: #3b82f6;
+    fill: #f7cd63;
   }
   90% {
-    fill: #a855f7;
+    fill: #fc8fc6;
   }
   100% {
     fill: #111827;
@@ -124,7 +124,8 @@ body {
 }
 
 .focus-brand:focus-visible {
-  box-shadow: 0 0 0 2px rgba(58, 143, 122, 0.45);
+  outline: 2px solid rgba(78, 85, 224, 0.45);
+  outline-offset: 2px;
 }
 
 .app-body {
@@ -135,6 +136,13 @@ body {
 .surface-card {
   background: var(--surface);
   border: 1px solid var(--surface-border);
+}
+
+input,
+select,
+textarea,
+button {
+  border-color: var(--surface-border);
 }
 
 .text-muted {
@@ -151,4 +159,14 @@ body {
 
 .border-surface {
   border-color: var(--surface-border);
+}
+
+.shadow,
+.shadow-sm,
+.shadow-md,
+.shadow-lg,
+.shadow-xl,
+.shadow-2xl,
+.shadow-soft {
+  box-shadow: none !important;
 }

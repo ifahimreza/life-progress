@@ -9,10 +9,10 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        satoshi: ["Satoshi", "Inter", "system-ui", "sans-serif"]
+        satoshi: ["Manrope", "Inter", "system-ui", "sans-serif"]
       },
       boxShadow: {
-        soft: "0 20px 60px rgba(0,0,0,0.06)"
+        soft: "none"
       }
     }
   },

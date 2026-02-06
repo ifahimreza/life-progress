@@ -1,6 +1,7 @@
 import {NextResponse} from "next/server";
-import config from "../../../../config";
+import config from "../../../../config.server";
 import {createCheckoutLink} from "../../../../libs/freemius";
+import {createSupabaseAdminClient} from "../../../../libs/supabaseAdmin";
 
 type CheckoutRequest = {
   plan?: "yearly" | "lifetime";
@@ -14,19 +15,34 @@ export async function POST(request: Request) {
     return NextResponse.json({error: "Missing Freemius configuration"}, {status: 500});
   }
 
-  const body = (await request.json().catch(() => ({}))) as CheckoutRequest;
-  if (!body.userId) {
-    return NextResponse.json({error: "Missing user id"}, {status: 400});
+  const authHeader = request.headers.get("authorization") ?? "";
+  const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
+  if (!token) {
+    return NextResponse.json({error: "Unauthorized"}, {status: 401});
   }
-  if (!body.email) {
+
+  const supabase = createSupabaseAdminClient();
+  const {data: authData, error: authError} = await supabase.auth.getUser(token);
+  if (authError || !authData?.user) {
+    return NextResponse.json({error: "Unauthorized"}, {status: 401});
+  }
+
+  const body = (await request.json().catch(() => ({}))) as CheckoutRequest;
+  if (body.userId && body.userId !== authData.user.id) {
+    return NextResponse.json({error: "Unauthorized"}, {status: 403});
+  }
+  if (!authData.user.email) {
     return NextResponse.json({error: "Missing user email"}, {status: 400});
   }
 
   try {
     const url = await createCheckoutLink({
       plan: body.plan,
-      email: body.email,
-      name: body.name
+      email: authData.user.email,
+      name:
+        body.name ??
+        (authData.user.user_metadata?.full_name as string | undefined) ??
+        (authData.user.user_metadata?.name as string | undefined)
     });
 
     return NextResponse.json({url});

@@ -1,6 +1,7 @@
-import {useCallback, useEffect, useMemo, useState} from "react";
+import {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import type {Session} from "@supabase/supabase-js";
 import type {Profile} from "./lifeDotsData";
+import {getRedirectUrl} from "./appUrl";
 import {getSupabaseClient} from "./supabaseClient";
 
 type UseSupabaseAuthOptions = {
@@ -32,6 +33,7 @@ export function useSupabaseAuth({
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [profileLoaded, setProfileLoaded] = useState(false);
+  const isActiveRef = useRef(true);
 
   const clearAuthState = useCallback(() => {
     setSession(null);
@@ -42,7 +44,7 @@ export function useSupabaseAuth({
 
   const refreshProfile = useCallback(
     async (userId: string) => {
-      if (!supabase) {
+      if (!supabase || !isActiveRef.current) {
         setHasAccess(false);
         setProfile(null);
         setProfileLoaded(false);
@@ -50,13 +52,35 @@ export function useSupabaseAuth({
       }
 
       setProfileLoaded(false);
-      if (fetchProfile) {
+      try {
+        if (fetchProfile) {
+          const {data, error} = await supabase
+            .from("profiles")
+            .select("has_access, profile")
+            .eq("id", userId)
+            .maybeSingle();
+
+          if (!isActiveRef.current) return;
+          if (error) {
+            setHasAccess(false);
+            setProfile(null);
+            setProfileLoaded(true);
+            return;
+          }
+
+          setHasAccess(Boolean(data?.has_access));
+          setProfile((data?.profile ?? null) as Profile | null);
+          setProfileLoaded(true);
+          return;
+        }
+
         const {data, error} = await supabase
           .from("profiles")
-          .select("has_access, profile")
+          .select("has_access")
           .eq("id", userId)
           .maybeSingle();
 
+        if (!isActiveRef.current) return;
         if (error) {
           setHasAccess(false);
           setProfile(null);
@@ -65,37 +89,26 @@ export function useSupabaseAuth({
         }
 
         setHasAccess(Boolean(data?.has_access));
-        setProfile((data?.profile ?? null) as Profile | null);
+        setProfile(null);
         setProfileLoaded(true);
-        return;
-      }
-
-      const {data, error} = await supabase
-        .from("profiles")
-        .select("has_access")
-        .eq("id", userId)
-        .maybeSingle();
-
-      if (error) {
+      } catch (err) {
+        if (!isActiveRef.current) return;
         setHasAccess(false);
         setProfile(null);
         setProfileLoaded(true);
-        return;
       }
-
-      setHasAccess(Boolean(data?.has_access));
-      setProfile(null);
-      setProfileLoaded(true);
     },
     [fetchProfile, supabase]
   );
 
   useEffect(() => {
     let isActive = true;
+    isActiveRef.current = true;
     if (!supabase) {
       setIsLoading(false);
       return () => {
         isActive = false;
+        isActiveRef.current = false;
       };
     }
 
@@ -110,14 +123,14 @@ export function useSupabaseAuth({
         }
 
         setSession(data.session);
+        setIsLoading(false);
         if (data.session?.user?.id) {
-          await refreshProfile(data.session.user.id);
+          void refreshProfile(data.session.user.id);
         } else {
           setHasAccess(false);
           setProfile(null);
           setProfileLoaded(false);
         }
-        setIsLoading(false);
       } catch (err) {
         if (!isActive) return;
         if (err instanceof DOMException && err.name === "AbortError") {
@@ -129,16 +142,16 @@ export function useSupabaseAuth({
       }
     };
 
-    const {data: subscription} = supabase.auth.onAuthStateChange(
+    const {data} = supabase.auth.onAuthStateChange(
       async (_event, nextSession) => {
         try {
           setSession(nextSession);
+          setIsLoading(false);
           if (nextSession?.user?.id) {
-            await refreshProfile(nextSession.user.id);
+            void refreshProfile(nextSession.user.id);
           } else {
             clearAuthState();
           }
-          setIsLoading(false);
         } catch (err) {
           if (!isActive) return;
           if (err instanceof DOMException && err.name === "AbortError") {
@@ -154,16 +167,16 @@ export function useSupabaseAuth({
     void loadSession();
     return () => {
       isActive = false;
-      subscription.subscription.unsubscribe();
+      isActiveRef.current = false;
+      const subscription =
+        data && "subscription" in data ? data.subscription : data;
+      subscription?.unsubscribe?.();
     };
   }, [clearAuthState, refreshProfile, supabase]);
 
   const signInWithGoogle = useCallback(async () => {
     if (!supabase) return;
-    const redirectTo =
-      typeof window !== "undefined"
-        ? `${window.location.origin}${redirectPath}`
-        : undefined;
+    const redirectTo = getRedirectUrl(redirectPath);
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: redirectTo ? {redirectTo} : undefined

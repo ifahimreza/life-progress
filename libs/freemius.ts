@@ -1,5 +1,5 @@
 import {Freemius, type CheckoutBuilderUserOptions} from "@freemius/sdk";
-import config from "../config";
+import config from "../config.server";
 
 type PlanKey = "yearly" | "lifetime";
 

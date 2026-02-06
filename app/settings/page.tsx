@@ -4,6 +4,7 @@ import Link from "next/link";
 import type {FormEvent} from "react";
 import {useEffect, useMemo, useState} from "react";
 import AppFooter from "../../components/AppFooter";
+import GoogleButton from "../../components/GoogleButton";
 import {LanguageId} from "../../libs/lifeDotsData";
 import {UiStrings, getTranslations} from "../../libs/i18n";
 import {loadStoredProfile} from "../../libs/profile";
@@ -76,6 +77,7 @@ export default function SettingsPage() {
   const [isCancelling, setIsCancelling] = useState(false);
 
   const {
+    supabase,
     userId,
     email,
     hasAccess,
@@ -97,13 +99,21 @@ export default function SettingsPage() {
   }, []);
 
   const loadPortalData = async () => {
-    if (!email) return;
+    if (!supabase) return;
+    const {data: sessionData} = await supabase.auth.getSession();
+    const token = sessionData.session?.access_token;
+    if (!token) return;
     setPortalLoading(true);
     setPortalError(null);
     try {
       const response = await fetch(
-        `/api/freemius/portal?action=portal_data&email=${encodeURIComponent(email)}`,
-        {cache: "no-store"}
+        `/api/freemius/portal?action=portal_data`,
+        {
+          cache: "no-store",
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
       );
       if (!response.ok) {
         const message = await response.text();
@@ -122,9 +132,9 @@ export default function SettingsPage() {
 
   useEffect(() => {
     if (activeTab !== "billing") return;
-    if (!email) return;
+    if (!userId) return;
     void loadPortalData();
-  }, [activeTab, email]);
+  }, [activeTab, userId]);
 
   const primarySubscription = portalData?.subscriptions?.primary ?? null;
 
@@ -191,7 +201,7 @@ export default function SettingsPage() {
             href="/"
             className="text-xs font-semibold uppercase tracking-[0.18em] text-muted transition hover:text-neutral-800"
           >
-            ← Back to Life in Dots
+            ← Back to DotSpan
           </Link>
           <div className="text-base font-semibold sm:text-lg text-main">
             <span className="title-main">Settings</span>
@@ -272,13 +282,9 @@ export default function SettingsPage() {
               ) : (
                 <div className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4 text-sm text-neutral-700">
                   <p className="font-semibold">Sign in to manage your account.</p>
-                  <button
-                    type="button"
-                    onClick={signInWithGoogle}
-                    className="mt-3 inline-flex items-center justify-center rounded-full bg-neutral-900 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white"
-                  >
-                    Sign in with Google
-                  </button>
+                  <div className="mt-3">
+                    <GoogleButton onClick={signInWithGoogle} size="sm" />
+                  </div>
                 </div>
               )}
             </div>
@@ -307,13 +313,9 @@ export default function SettingsPage() {
               ) : !userId ? (
                 <div className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4 text-sm text-neutral-700">
                   <p className="font-semibold">Sign in to access billing.</p>
-                  <button
-                    type="button"
-                    onClick={signInWithGoogle}
-                    className="mt-3 inline-flex items-center justify-center rounded-full bg-neutral-900 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white"
-                  >
-                    Sign in with Google
-                  </button>
+                  <div className="mt-3">
+                    <GoogleButton onClick={signInWithGoogle} size="sm" />
+                  </div>
                 </div>
               ) : portalLoading ? (
                 <div className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4 text-sm text-neutral-600">

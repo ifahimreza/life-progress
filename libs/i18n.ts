@@ -62,7 +62,7 @@ export type UiStrings = {
 
 const TRANSLATIONS: Record<Exclude<LanguageId, "default">, UiStrings> = {
   en: {
-    appTitle: "Life in Dots",
+    appTitle: "DotSpan",
     lifeInWeeks: "Life in Weeks",
     lifeInMonths: "Life in Months",
     lifeInYears: "Life in Years",
@@ -116,7 +116,7 @@ const TRANSLATIONS: Record<Exclude<LanguageId, "default">, UiStrings> = {
     languageBangla: "Bangla"
   },
   es: {
-    appTitle: "Life in Dots",
+    appTitle: "DotSpan",
     lifeInWeeks: "La vida en semanas",
     lifeInMonths: "La vida en meses",
     lifeInYears: "La vida en años",
@@ -170,7 +170,7 @@ const TRANSLATIONS: Record<Exclude<LanguageId, "default">, UiStrings> = {
     languageBangla: "Bangla"
   },
   fr: {
-    appTitle: "Life in Dots",
+    appTitle: "DotSpan",
     lifeInWeeks: "La vie en semaines",
     lifeInMonths: "La vie en mois",
     lifeInYears: "La vie en années",
@@ -224,7 +224,7 @@ const TRANSLATIONS: Record<Exclude<LanguageId, "default">, UiStrings> = {
     languageBangla: "Bangla"
   },
   ja: {
-    appTitle: "Life in Dots",
+    appTitle: "DotSpan",
     lifeInWeeks: "人生を週で",
     lifeInMonths: "人生を月で",
     lifeInYears: "人生を年で",
@@ -278,7 +278,7 @@ const TRANSLATIONS: Record<Exclude<LanguageId, "default">, UiStrings> = {
     languageBangla: "ベンガル語"
   },
   hi: {
-    appTitle: "Life in Dots",
+    appTitle: "DotSpan",
     lifeInWeeks: "सप्ताहों में जीवन",
     lifeInMonths: "महीनों में जीवन",
     lifeInYears: "वर्षों में जीवन",
@@ -332,7 +332,7 @@ const TRANSLATIONS: Record<Exclude<LanguageId, "default">, UiStrings> = {
     languageBangla: "बंगाली"
   },
   bn: {
-    appTitle: "Life in Dots",
+    appTitle: "DotSpan",
     lifeInWeeks: "সপ্তাহে জীবন",
     lifeInMonths: "মাসে জীবন",
     lifeInYears: "বছরে জীবন",

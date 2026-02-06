@@ -1,5 +1,6 @@
 import {getFreemiusClient} from "../../../../libs/freemius";
-import config from "../../../../config";
+import config from "../../../../config.server";
+import {createSupabaseAdminClient} from "../../../../libs/supabaseAdmin";
 
 function getPortalEndpoint(request: Request) {
   const url = new URL(request.url);
@@ -8,15 +9,21 @@ function getPortalEndpoint(request: Request) {
 
 async function handlePortalRequest(request: Request) {
   const freemius = getFreemiusClient();
-  const url = new URL(request.url);
-  const email =
-    url.searchParams.get("email") ?? request.headers.get("x-user-email");
+  const authHeader = request.headers.get("authorization") ?? "";
+  const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
+  if (!token) {
+    return new Response("Unauthorized", {status: 401});
+  }
+
+  const supabase = createSupabaseAdminClient();
+  const {data, error} = await supabase.auth.getUser(token);
+  if (error || !data?.user?.email) {
+    return new Response("Unauthorized", {status: 401});
+  }
+  const email = data.user.email;
 
   const getUser = async () => {
-    if (email) {
-      return {email};
-    }
-    return null;
+    return {email};
   };
 
   return freemius.customerPortal.request.process(

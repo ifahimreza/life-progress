@@ -2,35 +2,24 @@
 
 import Link from "next/link";
 import type {FormEvent} from "react";
-import {useEffect, useMemo, useState} from "react";
+import {useCallback, useEffect, useState} from "react";
 import {useRouter} from "next/navigation";
-import AppFooter from "../../components/AppFooter";
+import GoogleButton from "../../components/GoogleButton";
 import LogoMark from "../../components/LogoMark";
-import {LanguageId} from "../../libs/lifeDotsData";
-import {UiStrings, getTranslations} from "../../libs/i18n";
-import {loadStoredProfile} from "../../libs/profile";
+import TurnstileWidget from "../../components/TurnstileWidget";
+import {getRedirectUrl} from "../../libs/appUrl";
 import {getSupabaseClient} from "../../libs/supabaseClient";
 
 export default function LoginPage() {
-  const [language, setLanguage] = useState<LanguageId>("default");
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGoogleSubmitting, setIsGoogleSubmitting] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const router = useRouter();
   const supabase = getSupabaseClient();
-
-  const navigatorLanguage = typeof navigator !== "undefined" ? navigator.language : "en";
-  const strings = useMemo<UiStrings>(
-    () => getTranslations(language, navigatorLanguage),
-    [language, navigatorLanguage]
-  );
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const parsed = loadStoredProfile(window.localStorage);
-    setLanguage((parsed?.language ?? "default") as LanguageId);
-  }, []);
+  const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim() ?? "";
 
   useEffect(() => {
     if (!supabase) return;
@@ -54,28 +43,64 @@ export default function LoginPage() {
     };
   }, [router, supabase]);
 
-  const redirectTo =
-    typeof window !== "undefined" ? `${window.location.origin}/onboarding` : undefined;
+  const redirectTo = getRedirectUrl("/onboarding");
+  const isCaptchaReady = Boolean(turnstileSiteKey && captchaToken);
+
+  const handleCaptchaTokenChange = useCallback((token: string | null) => {
+    setCaptchaToken(token);
+  }, []);
+
+  const validateCaptcha = useCallback(() => {
+    if (!turnstileSiteKey) {
+      setError("Security check is unavailable. Please contact support.");
+      return false;
+    }
+    if (!captchaToken) {
+      setError("Please complete the security check to continue.");
+      return false;
+    }
+    return true;
+  }, [captchaToken, turnstileSiteKey]);
 
   const handleGoogle = async () => {
     if (!supabase) return;
+    if (!validateCaptcha()) return;
     setError(null);
-    await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: redirectTo ? {redirectTo} : undefined
-    });
+    setStatus(null);
+    setIsGoogleSubmitting(true);
+    try {
+      const {error: oauthError} = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          ...(redirectTo ? {redirectTo} : {}),
+          queryParams: {captcha_token: captchaToken as string}
+        }
+      });
+      if (oauthError) {
+        throw oauthError;
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Unable to continue with Google.";
+      setError(message);
+    } finally {
+      setIsGoogleSubmitting(false);
+    }
   };
 
   const handleEmail = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!supabase || !email.trim()) return;
+    if (!validateCaptcha()) return;
     setIsSubmitting(true);
     setError(null);
     setStatus(null);
     try {
       const {error: otpError} = await supabase.auth.signInWithOtp({
         email: email.trim(),
-        options: redirectTo ? {emailRedirectTo: redirectTo} : undefined
+        options: {
+          ...(redirectTo ? {emailRedirectTo: redirectTo} : {}),
+          captchaToken: captchaToken as string
+        }
       });
       if (otpError) {
         throw otpError;
@@ -90,96 +115,77 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="flex min-h-screen flex-col py-10">
-      <section className="mx-auto flex w-full max-w-[520px] flex-1 flex-col gap-6 px-4 sm:px-6">
-        <div className="flex items-center justify-between">
-          <Link
-            href="/"
-            className="text-xs font-semibold uppercase tracking-[0.18em] text-muted transition hover:text-neutral-800"
-          >
-            ← Back to Life in Dots
-          </Link>
+    <main className="flex min-h-screen items-center justify-center bg-white px-4 py-10">
+      <section className="w-full max-w-[360px] rounded-2xl border border-neutral-200 bg-white p-6 sm:p-7">
+        <div className="h-8 w-8 overflow-hidden rounded-lg opacity-60">
+          <LogoMark className="h-full w-full" />
         </div>
+        <h1 className="mt-5 text-[23px] font-semibold leading-tight text-main">
+          Welcome back
+        </h1>
 
-        <div className="rounded-[32px] surface-card p-6 shadow-soft sm:p-8">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 overflow-hidden rounded-2xl border border-surface bg-white">
-              <LogoMark className="h-full w-full" />
+        <div className="mt-5 grid gap-3">
+          <GoogleButton
+            onClick={handleGoogle}
+            disabled={isGoogleSubmitting || isSubmitting || !isCaptchaReady}
+            className="!rounded-xl !border !border-neutral-300 !bg-white !text-neutral-800 !shadow-none hover:!border-neutral-400 hover:!bg-neutral-50"
+          />
+          {turnstileSiteKey ? (
+            <div className="mt-1 overflow-hidden rounded-xl border border-neutral-200 px-2 py-2">
+              <TurnstileWidget
+                siteKey={turnstileSiteKey}
+                onTokenChange={handleCaptchaTokenChange}
+              />
             </div>
-            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-subtle">
-              Life in Dots
-            </span>
-          </div>
-
-          <h1 className="mt-6 text-3xl font-semibold text-main">
-            Welcome back
-          </h1>
-          <p className="mt-2 text-sm text-muted">
-            Sign in to keep your timeline in sync across devices.
-          </p>
-
-          <div className="mt-6 grid gap-3">
-            <button
-              type="button"
-              onClick={handleGoogle}
-              className="flex w-full items-center justify-center gap-2 rounded-full border border-neutral-200 px-4 py-3 text-sm font-semibold text-neutral-800 transition hover:border-neutral-400"
-            >
-              <span className="h-4 w-4 rounded-full bg-white text-center text-[10px] font-bold text-neutral-800">
-                G
-              </span>
-              Continue with Google
-            </button>
-            <button
-              type="button"
-              disabled
-              className="flex w-full items-center justify-center gap-2 rounded-full border border-neutral-200 px-4 py-3 text-sm font-semibold text-neutral-400"
-            >
-              Continue with Apple
-            </button>
-          </div>
-
-          <div className="my-6 h-px w-full bg-neutral-200" />
-
-          <form onSubmit={handleEmail} className="grid gap-3">
-            <label className="text-xs font-semibold uppercase tracking-[0.2em] text-subtle">
-              Email
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              placeholder="you@example.com"
-              className="w-full rounded-2xl border border-neutral-200 px-4 py-3 text-sm text-neutral-900 shadow-sm focus-visible:outline-none focus-brand"
-              required
-            />
-            <button
-              type="submit"
-              disabled={!email.trim() || isSubmitting}
-              className="mt-2 w-full rounded-full bg-neutral-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:bg-neutral-300"
-            >
-              {isSubmitting ? "Sending..." : "Continue"}
-            </button>
-          </form>
-
-          {status ? (
-            <p className="mt-3 text-sm text-emerald-700">{status}</p>
-          ) : null}
-          {error ? (
-            <p className="mt-3 text-sm text-rose-700">{error}</p>
-          ) : null}
-
-          <p className="mt-6 text-xs text-muted">
-            By signing in, you agree to our Terms &amp; Privacy.
-            <br />
-            New here?{" "}
-            <Link href="/signup" className="font-semibold text-neutral-700">
-              Create an account
-            </Link>
-            .
-          </p>
+          ) : (
+            <p className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">
+              Security check unavailable. Set NEXT_PUBLIC_TURNSTILE_SITE_KEY.
+            </p>
+          )}
         </div>
+
+        <div className="my-6 h-px w-full bg-neutral-200" />
+
+        <form onSubmit={handleEmail} className="grid gap-3">
+          <label className="text-sm font-semibold text-main">
+            Email
+          </label>
+          <input
+            type="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            placeholder="you@example.com"
+            className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-900 placeholder:text-neutral-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c8cdf8]"
+            required
+          />
+          <button
+            type="submit"
+            disabled={!email.trim() || isSubmitting || !isCaptchaReady}
+            className="mt-2 w-full rounded-xl bg-[#4e55e0] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#434ad0] disabled:cursor-not-allowed disabled:bg-neutral-300"
+          >
+            {isSubmitting ? "Sending..." : "Continue"}
+          </button>
+        </form>
+
+        {status ? (
+          <p className="mt-3 text-sm text-emerald-700">{status}</p>
+        ) : null}
+        {error ? (
+          <p className="mt-3 text-sm text-rose-700">{error}</p>
+        ) : null}
+
+        <p className="mt-5 text-xs text-muted">
+          By continuing, you agree to our{" "}
+          <Link href="/terms" className="underline underline-offset-2 text-neutral-700">
+            Terms of Service
+          </Link>{" "}
+          and{" "}
+          <Link href="/privacy" className="underline underline-offset-2 text-neutral-700">
+            Privacy Policy
+          </Link>
+          .
+        </p>
       </section>
-      <AppFooter strings={strings} />
     </main>
   );
 }

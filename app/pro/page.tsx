@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import {useEffect, useMemo, useState} from "react";
+import {useRouter} from "next/navigation";
 import AppFooter from "../../components/AppFooter";
+import GoogleButton from "../../components/GoogleButton";
 import {Profile, LanguageId} from "../../libs/lifeDotsData";
 import {UiStrings, getTranslations} from "../../libs/i18n";
 import {loadStoredProfile} from "../../libs/profile";
@@ -14,7 +16,9 @@ export default function ProPage() {
   const [missingFields, setMissingFields] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<"yearly" | "lifetime">("yearly");
+  const router = useRouter();
   const {
+    supabase,
     userId,
     email,
     hasAccess,
@@ -41,6 +45,13 @@ export default function ProPage() {
     setMissingFields(missing);
   }, []);
 
+  useEffect(() => {
+    if (isAuthLoading) return;
+    if (userId && hasAccess) {
+      router.replace("/dashboard");
+    }
+  }, [hasAccess, isAuthLoading, router, userId]);
+
   const canCheckout = missingFields.length === 0 && Boolean(userId) && Boolean(email);
 
   const handleSignIn = async () => {
@@ -51,9 +62,20 @@ export default function ProPage() {
     if (!canCheckout || isLoading) return;
     setIsLoading(true);
     try {
+      if (!supabase) {
+        throw new Error("Supabase is not configured.");
+      }
+      const {data: sessionData} = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+      if (!token) {
+        throw new Error("Please sign in again.");
+      }
       const response = await fetch("/api/freemius/checkout", {
         method: "POST",
-        headers: {"Content-Type": "application/json"},
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
         body: JSON.stringify({
           plan: selectedPlan,
           userId,
@@ -82,7 +104,7 @@ export default function ProPage() {
             href="/"
             className="text-xs font-semibold uppercase tracking-[0.18em] text-muted transition hover:text-neutral-800"
           >
-            ← Back to Life in Dots
+            ← Back to DotSpan
           </Link>
           <div className="text-base font-semibold sm:text-lg text-main">
             <span className="title-main">{strings.appTitle} Pro</span>
@@ -143,13 +165,9 @@ export default function ProPage() {
             ) : !userId ? (
               <div className="mt-5 rounded-2xl border border-neutral-200 bg-neutral-50 p-4 text-sm text-neutral-700">
                 <p className="font-semibold">Sign in to continue.</p>
-                <button
-                  type="button"
-                  onClick={handleSignIn}
-                  className="mt-3 inline-flex items-center justify-center rounded-full bg-neutral-900 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white"
-                >
-                  Sign in with Google
-                </button>
+                <div className="mt-3">
+                  <GoogleButton onClick={handleSignIn} size="sm" />
+                </div>
               </div>
             ) : !canCheckout ? (
               <div className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">

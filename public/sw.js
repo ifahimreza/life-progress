@@ -1,6 +1,5 @@
-const CACHE_NAME = "life-dots-static-v1";
+const CACHE_NAME = "dotspan-static-v2";
 const STATIC_ASSETS = [
-  "/",
   "/manifest.json",
   "/icons/icon.svg"
 ];
@@ -27,7 +26,6 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
   const isSameOrigin = url.origin === self.location.origin;
   const isStaticAsset =
-    url.pathname.startsWith("/_next/") ||
     url.pathname.startsWith("/icons/") ||
     url.pathname === "/manifest.json";
 

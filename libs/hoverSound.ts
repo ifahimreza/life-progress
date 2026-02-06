@@ -1,14 +1,17 @@
 let audioContext: AudioContext | null = null;
 let isUnlocked = false;
 let lastPlayTime = 0;
-const SOUND_STORAGE_KEY = "life-dots-menu-sound";
+const SOUND_STORAGE_KEY = "dotspan-menu-sound";
+const LEGACY_SOUND_KEY = "life-dots-menu-sound";
 
 export type MenuSoundMode = "off" | "soft" | "bright";
 let soundMode: MenuSoundMode = "soft";
 
 function loadSoundMode() {
   if (typeof window === "undefined") return soundMode;
-  const stored = window.localStorage.getItem(SOUND_STORAGE_KEY);
+  const stored =
+    window.localStorage.getItem(SOUND_STORAGE_KEY) ??
+    window.localStorage.getItem(LEGACY_SOUND_KEY);
   if (stored === "off" || stored === "soft" || stored === "bright") {
     soundMode = stored;
   }

@@ -6,7 +6,7 @@ import {useRouter} from "next/navigation";
 import AppFooter from "../../components/AppFooter";
 import {LanguageId} from "../../libs/lifeDotsData";
 import {UiStrings, getTranslations} from "../../libs/i18n";
-import {loadStoredProfile} from "../../libs/profile";
+import {hasCompletedOnboarding, loadStoredProfile} from "../../libs/profile";
 import {useSupabaseAuth} from "../../libs/useSupabaseAuth";
 
 export default function DashboardPage() {
@@ -18,6 +18,7 @@ export default function DashboardPage() {
     hasAccess,
     profile,
     isLoading,
+    profileLoaded,
     signOut
   } = useSupabaseAuth({redirectPath: "/dashboard", fetchProfile: true});
 
@@ -33,12 +34,19 @@ export default function DashboardPage() {
     setLanguage((parsed?.language ?? "default") as LanguageId);
   }, []);
 
+  const onboardingComplete = hasCompletedOnboarding(profile);
+
   useEffect(() => {
     if (isLoading) return;
     if (!userId) {
       router.replace("/login");
+      return;
     }
-  }, [isLoading, router, userId]);
+    if (!profileLoaded) return;
+    if (!onboardingComplete) {
+      router.replace("/onboarding");
+    }
+  }, [isLoading, onboardingComplete, profileLoaded, router, userId]);
 
   const displayName =
     profile?.name?.trim() ||
@@ -53,7 +61,7 @@ export default function DashboardPage() {
             href="/app"
             className="text-xs font-semibold uppercase tracking-[0.18em] text-muted transition hover:text-neutral-800"
           >
-            ← Open Life in Dots
+            ← Open DotSpan
           </Link>
           <div className="text-base font-semibold sm:text-lg text-main">
             <span className="title-main">Dashboard</span>
@@ -77,7 +85,7 @@ export default function DashboardPage() {
                 href="/app"
                 className="rounded-2xl border border-neutral-200 px-4 py-3 text-sm font-semibold text-neutral-900 transition hover:border-neutral-400"
               >
-                Open Life Dots
+                Open DotSpan
               </Link>
               <Link
                 href="/settings"

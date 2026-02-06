@@ -1,7 +1,7 @@
 {
-  "name": "Life in Dots",
-  "short_name": "Life in Dots",
-  "description": "Track the passage of time with a minimalist life dots view",
+  "name": "DotSpan",
+  "short_name": "DotSpan",
+  "description": "See time clearly with a minimalist life dots timeline",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#f5f5f5",

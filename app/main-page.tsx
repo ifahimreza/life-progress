@@ -89,7 +89,6 @@ export default function MainPage() {
     hasCustomExpectancy: draftHasCustomExpectancy,
     dotStyle: draftDotStyle,
     themeId: draftThemeId,
-    language: draftLanguage,
     viewMode: draftViewMode
   } = draft;
 
@@ -176,13 +175,9 @@ export default function MainPage() {
   useEffect(() => {
     if (!hasHydrated) return;
     if (searchParams?.get("settings") === "1") {
-      if (userId) {
-        router.push("/dashboard");
-      } else {
-        setIsModalOpen(true);
-      }
+      setIsModalOpen(true);
     }
-  }, [hasHydrated, searchParams, userId, router]);
+  }, [hasHydrated, searchParams]);
 
   useEffect(() => {
     if (typeof document === "undefined") return;
@@ -371,11 +366,7 @@ export default function MainPage() {
         <AppHeader
           title={strings.appTitle}
           onOpenSettings={() => {
-            if (userId) {
-              router.push("/dashboard");
-            } else {
-              setIsModalOpen(true);
-            }
+            setIsModalOpen(true);
           }}
           onDownloadPng={handleDownloadPng}
           onDownloadJpg={handleDownloadJpg}
@@ -411,45 +402,45 @@ export default function MainPage() {
           showAxis={isMonthView}
         />
       </section>
-      <AppFooter strings={strings} />
+      <AppFooter
+        strings={strings}
+        languageOptions={languageOptions}
+        languageValue={language}
+        onLanguageChange={(value) => updateProfile({language: value})}
+      />
 
-      {!userId ? (
-        <ProfileDrawer
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          mounted={mounted}
-          isSignedIn={Boolean(userId)}
-          authEmail={authEmail}
-          hasAccess={hasAccess}
-          isAuthLoading={isAuthLoading}
-          onSignIn={handleSignIn}
-          onSignOut={handleSignOut}
-          onUpgrade={handleUpgrade}
-          onSave={handleSave}
-          draftName={draftName}
-          onDraftNameChange={(value) => updateDraft({name: value})}
-          draftCountry={draftCountry}
-          onDraftCountryChange={handleDraftCountryChange}
-          draftDob={draftDob}
-          onDraftDobChange={(value) => updateDraft({dob: value})}
-          draftLifeExpectancy={draftLifeExpectancy}
-          onDraftLifeExpectancyChange={handleDraftLifeExpectancyChange}
-          draftDotStyle={draftDotStyle}
-          onDraftDotStyleChange={(value) => updateDraft({dotStyle: value})}
-          draftThemeId={draftThemeId}
-          onDraftThemeChange={(value) => updateDraft({themeId: value})}
-          viewMode={draftViewMode}
-          onViewModeChange={(value) => updateDraft({viewMode: value})}
-          draftLanguage={draftLanguage}
-          onDraftLanguageChange={(value) => updateDraft({language: value})}
-          countryOptions={countryOptions}
-          dotStyleOptions={dotStyleOptions}
-          themeOptions={themeOptions}
-          viewModeOptions={viewModeOptions}
-          languageOptions={languageOptions}
-          strings={strings}
-        />
-      ) : null}
+      <ProfileDrawer
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        mounted={mounted}
+        isSignedIn={Boolean(userId)}
+        authEmail={authEmail}
+        hasAccess={hasAccess}
+        isAuthLoading={isAuthLoading}
+        onSignIn={handleSignIn}
+        onSignOut={handleSignOut}
+        onUpgrade={handleUpgrade}
+        onSave={handleSave}
+        draftName={draftName}
+        onDraftNameChange={(value) => updateDraft({name: value})}
+        draftCountry={draftCountry}
+        onDraftCountryChange={handleDraftCountryChange}
+        draftDob={draftDob}
+        onDraftDobChange={(value) => updateDraft({dob: value})}
+        draftLifeExpectancy={draftLifeExpectancy}
+        onDraftLifeExpectancyChange={handleDraftLifeExpectancyChange}
+        draftDotStyle={draftDotStyle}
+        onDraftDotStyleChange={(value) => updateDraft({dotStyle: value})}
+        draftThemeId={draftThemeId}
+        onDraftThemeChange={(value) => updateDraft({themeId: value})}
+        viewMode={draftViewMode}
+        onViewModeChange={(value) => updateDraft({viewMode: value})}
+        countryOptions={countryOptions}
+        dotStyleOptions={dotStyleOptions}
+        themeOptions={themeOptions}
+        viewModeOptions={viewModeOptions}
+        strings={strings}
+      />
     </main>
   );
 }

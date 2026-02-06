@@ -7,7 +7,6 @@ import {useEffect, useMemo, useState} from "react";
 import {
   CountryOption,
   DotStyle,
-  LanguageId,
   SelectOption,
   ViewMode
 } from "../libs/lifeDotsData";
@@ -42,13 +41,10 @@ type ProfileDrawerProps = {
   onDraftThemeChange: (value: ThemeId) => void;
   viewMode: ViewMode;
   onViewModeChange: (value: ViewMode) => void;
-  draftLanguage: LanguageId;
-  onDraftLanguageChange: (value: LanguageId) => void;
   countryOptions: CountryOption[];
   dotStyleOptions: SelectOption[];
   themeOptions: SelectOption[];
   viewModeOptions: SelectOption[];
-  languageOptions: SelectOption[];
   strings: UiStrings;
 };
 
@@ -78,13 +74,10 @@ export default function ProfileDrawer({
   onDraftThemeChange,
   viewMode,
   onViewModeChange,
-  draftLanguage,
-  onDraftLanguageChange,
   countryOptions,
   dotStyleOptions,
   themeOptions,
   viewModeOptions,
-  languageOptions,
   strings
 }: ProfileDrawerProps) {
   const selectedCountry = countryOptions.find((option) => option.id === draftCountry);
@@ -449,40 +442,6 @@ export default function ProfileDrawer({
                 size="compact"
                 onChange={(params) =>
                   onViewModeChange((params.value[0]?.id as ViewMode) ?? "weeks")
-                }
-                overrides={{
-                  ControlContainer: {
-                    style: {
-                      minHeight: "40px",
-                      borderTopLeftRadius: "14px",
-                      borderTopRightRadius: "14px",
-                      borderBottomLeftRadius: "14px",
-                      borderBottomRightRadius: "14px",
-                      backgroundColor: "transparent",
-                      borderColor: "rgba(15, 23, 42, 0.12)",
-                      boxShadow: "none"
-                    }
-                  },
-                  Input: {style: {fontSize: "13px"}},
-                  Placeholder: {style: {fontSize: "13px", color: "#94a3b8"}},
-                  SingleValue: {style: {fontSize: "13px"}},
-                  ValueContainer: {style: {paddingLeft: "12px", paddingRight: "12px"}},
-                  IconsContainer: {style: {paddingRight: "8px"}}
-                }}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-[11px] font-semibold uppercase tracking-wide text-muted">
-                {strings.languageLabel}
-              </label>
-              <Select
-                options={languageOptions}
-                value={languageOptions.filter((option) => option.id === draftLanguage)}
-                placeholder={strings.languageLabel}
-                clearable={false}
-                size="compact"
-                onChange={(params) =>
-                  onDraftLanguageChange((params.value[0]?.id as LanguageId) ?? "default")
                 }
                 overrides={{
                   ControlContainer: {

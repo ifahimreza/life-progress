@@ -110,3 +110,14 @@ export function toStoredProfile(state: ProfileState): Profile {
     viewMode: state.viewMode
   };
 }
+
+export function hasCompletedOnboarding(profile: Profile | null): boolean {
+  if (!profile) return false;
+  return Boolean(
+    profile.name?.trim() &&
+      profile.country &&
+      profile.dob &&
+      profile.profession &&
+      profile.discovery
+  );
+}

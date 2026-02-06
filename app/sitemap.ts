@@ -2,7 +2,7 @@ import type {MetadataRoute} from "next";
 import config from "../config";
 
 const baseUrl = config.appUrl?.replace(/\/$/, "") || "http://localhost:3000";
-const publicRoutes = ["/", "/pro"];
+const publicRoutes = ["/", "/pro", "/privacy", "/terms", "/refund"];
 
 export default function sitemap(): MetadataRoute.Sitemap {
   return publicRoutes.map((route) => ({

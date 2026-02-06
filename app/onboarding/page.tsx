@@ -9,7 +9,7 @@ import LogoMark from "../../components/LogoMark";
 import {LanguageId, Profile, STORAGE_KEY} from "../../libs/lifeDotsData";
 import {UiStrings, getTranslations, resolveLocale} from "../../libs/i18n";
 import {DEFAULT_THEME_ID} from "../../libs/themes";
-import {loadStoredProfile} from "../../libs/profile";
+import {hasCompletedOnboarding, loadStoredProfile} from "../../libs/profile";
 import {useSupabaseAuth} from "../../libs/useSupabaseAuth";
 import {countryCodes, lifeExpectancyByCountry} from "../../data/countries";
 
@@ -33,8 +33,8 @@ const DISCOVERY_OPTIONS = [
   "Other"
 ];
 
-const ONBOARDING_KEY = "life-dots-onboarded";
-const ONBOARDING_DATA_KEY = "life-dots-onboarding";
+const ONBOARDING_KEY = "dotspan-onboarded";
+const ONBOARDING_DATA_KEY = "dotspan-onboarding";
 
 export default function OnboardingPage() {
   const [language, setLanguage] = useState<LanguageId>("default");
@@ -47,8 +47,17 @@ export default function OnboardingPage() {
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const router = useRouter();
-  const {userId, email, session, supabase, isLoading} = useSupabaseAuth({
-    redirectPath: "/onboarding"
+  const {
+    userId,
+    email,
+    session,
+    supabase,
+    isLoading,
+    profile,
+    profileLoaded
+  } = useSupabaseAuth({
+    redirectPath: "/onboarding",
+    fetchProfile: true
   });
 
   const navigatorLanguage = typeof navigator !== "undefined" ? navigator.language : "en";
@@ -83,18 +92,22 @@ export default function OnboardingPage() {
     if (!name && nameFromAuth) setName(nameFromAuth);
   }, [name, session]);
 
+  const onboardingComplete = hasCompletedOnboarding(profile);
+
   useEffect(() => {
     if (isLoading) return;
     if (!userId) {
       router.replace("/login");
       return;
     }
-    if (typeof window === "undefined") return;
-    const onboarded = window.localStorage.getItem(ONBOARDING_KEY);
-    if (onboarded) {
+    if (!profileLoaded) return;
+    if (onboardingComplete) {
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem(ONBOARDING_KEY, "1");
+      }
       router.replace("/dashboard");
     }
-  }, [isLoading, router, userId]);
+  }, [isLoading, onboardingComplete, profileLoaded, router, userId]);
 
   const countryOptions = useMemo(() => {
     const formatter = new Intl.DisplayNames([resolvedLocale], {type: "region"});
@@ -182,7 +195,7 @@ export default function OnboardingPage() {
             href="/"
             className="text-xs font-semibold uppercase tracking-[0.18em] text-muted transition hover:text-neutral-800"
           >
-            ← Back to Life in Dots
+            ← Back to DotSpan
           </Link>
         </div>
 
@@ -192,7 +205,7 @@ export default function OnboardingPage() {
               <LogoMark className="h-full w-full" />
             </div>
             <span className="text-xs font-semibold uppercase tracking-[0.2em] text-subtle">
-              Life in Dots
+              DotSpan
             </span>
           </div>
 
@@ -200,7 +213,7 @@ export default function OnboardingPage() {
             Welcome
           </h1>
           <p className="mt-2 text-sm text-muted">
-            We want to make Life in Dots work for you.
+            We want to make DotSpan work for you.
           </p>
 
           <form onSubmit={handleSubmit} className="mt-6 grid gap-4">
@@ -298,7 +311,7 @@ export default function OnboardingPage() {
               disabled={isSaving}
               className="mt-2 w-full rounded-full bg-neutral-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:bg-neutral-300"
             >
-              {isSaving ? "Saving..." : "Take me to Life in Dots"}
+              {isSaving ? "Saving..." : "Take me to DotSpan"}
             </button>
           </form>
 

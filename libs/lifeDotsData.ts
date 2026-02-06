@@ -33,8 +33,8 @@ export type Profile = {
   viewMode?: ViewMode;
 };
 
-export const STORAGE_KEY = "life-dots";
-export const LEGACY_STORAGE_KEYS = ["life-progress-profile", "life-progress"];
+export const STORAGE_KEY = "dotspan";
+export const LEGACY_STORAGE_KEYS = ["life-dots", "life-progress-profile", "life-progress"];
 
 export const SUPPORTED_LANGUAGES: LanguageId[] = [
   "default",
