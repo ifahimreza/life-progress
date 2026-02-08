@@ -51,8 +51,6 @@ export default function LoginPage() {
   }, [nextPath, router, supabase]);
 
   const redirectTo = getRedirectUrl(nextPath ?? "/onboarding");
-  const isCaptchaReady = Boolean(turnstileSiteKey && captchaToken);
-
   const handleCaptchaTokenChange = useCallback((token: string | null) => {
     setCaptchaToken(token);
   }, []);
@@ -147,7 +145,7 @@ export default function LoginPage() {
         <div className="mt-5 grid gap-3">
           <GoogleButton
             onClick={handleGoogle}
-            disabled={isGoogleSubmitting || isSubmitting || !isCaptchaReady}
+            disabled={isGoogleSubmitting || isSubmitting}
             className="!rounded-xl !border !border-neutral-300 !bg-white !text-neutral-800 !shadow-none hover:!border-neutral-400 hover:!bg-neutral-50"
           />
           {turnstileSiteKey ? (
@@ -180,7 +178,7 @@ export default function LoginPage() {
           />
           <button
             type="submit"
-            disabled={!email.trim() || isSubmitting || !isCaptchaReady}
+            disabled={!email.trim() || isSubmitting}
             className="mt-2 w-full rounded-xl bg-[#00c565] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#00ae59] disabled:cursor-not-allowed disabled:bg-neutral-300"
           >
             {isSubmitting ? "Sending..." : "Continue"}
